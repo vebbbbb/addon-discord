@@ -115,14 +115,11 @@ func TestRescanCatchesMissedNotifications(t *testing.T) {
 	os.WriteFile(filepath.Join(shots, "old.jpg"), jpegish, 0o644) // present at start: ignored
 	var mu sync.Mutex
 	var got []string
-	w, err := New(Config{ScreenshotDirs: []string{shots},
+	w, err := New(Config{ScreenshotDirs: []string{shots}, RescanEvery: 100 * time.Millisecond,
 		OnScreenshot: func(p string) { mu.Lock(); got = append(got, filepath.Base(p)); mu.Unlock() }})
 	if err != nil {
 		t.Fatal(err)
 	}
-	old := RescanEvery
-	RescanEvery = 100 * time.Millisecond
-	defer func() { RescanEvery = old }()
 	w.fs.Remove(shots) // simulate: notifications never arrive
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

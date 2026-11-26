@@ -31,6 +31,8 @@ type Config struct {
 	// OnLog gets diagnostic lines (every file seen in a Screenshots folder).
 	OnLog    func(string)
 	Debounce time.Duration
+	// RescanEvery: safety-net folder check interval (default 3 s).
+	RescanEvery time.Duration
 }
 
 // Watcher multiplexes one fsnotify watcher over all folders.
@@ -45,15 +47,18 @@ type Watcher struct {
 	svTimers      map[string]*time.Timer
 }
 
-// RescanEvery is the safety-net interval: the Screenshots folders are also listed this often,
-// in case a file notification was missed.
-var RescanEvery = 3 * time.Second
+// RescanEvery is the default safety-net interval: the Screenshots folders are also listed this
+// often, in case a file notification was missed.
+const RescanEvery = 3 * time.Second
 
 // New creates the folders' watches. Missing Screenshots folders are created (WoW creates them
 // lazily on the first screenshot, but we need a folder to watch).
 func New(cfg Config) (*Watcher, error) {
 	if cfg.Debounce == 0 {
 		cfg.Debounce = 1500 * time.Millisecond
+	}
+	if cfg.RescanEvery == 0 {
+		cfg.RescanEvery = RescanEvery
 	}
 	fw, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -145,7 +150,7 @@ func (w *Watcher) Run(ctx context.Context) {
 	// notification loop below were ever stuck.
 	go w.rescanLoop(ctx)
 	if w.cfg.OnLog != nil {
-		w.cfg.OnLog(fmt.Sprintf("watcher running (%d screenshot folder(s), folder check every %s)", len(w.cfg.ScreenshotDirs), RescanEvery))
+		w.cfg.OnLog(fmt.Sprintf("watcher running (%d screenshot folder(s), folder check every %s)", len(w.cfg.ScreenshotDirs), w.cfg.RescanEvery))
 	}
 	// This loop only reads events and never calls back into fsnotify (no Add): on Windows
 	// fsnotify.Add waits for fsnotify's own goroutine, which waits for us to read the next event -
@@ -206,7 +211,7 @@ func (w *Watcher) rescanLoop(ctx context.Context) {
 			w.cfg.OnLog(fmt.Sprintf("folder check crashed: %v\n%s", r, debug.Stack()))
 		}
 	}()
-	rescan := time.NewTicker(RescanEvery)
+	rescan := time.NewTicker(w.cfg.RescanEvery)
 	defer rescan.Stop()
 	alive := time.NewTicker(30 * time.Minute)
 	defer alive.Stop()
