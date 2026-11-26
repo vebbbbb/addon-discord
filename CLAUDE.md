@@ -15,7 +15,11 @@ webhook in real time (target: under 2 s), each with a screenshot.
 * Shipping data (new final bosses): edit Data/Dungeons.lua, tag `vX.Y.Z`; CI publishes
   NAVTOK.exe; players click "Check for updates" (exe swap + restart, addon re-installed).
 * The companion writes only `%LOCALAPPDATA%\NAVTOK\{config.json,state.json,navtok.log}` and
-  `<client>\Interface\AddOns\NavtokDiscord\`.
+  `<client>\Interface\AddOns\NavtokDiscord\` (Linux: `~/.config/NAVTOK/` plus `navtok.lock`, and
+  `~/.config/autostart/navtok.desktop` instead of the Run key).
+* Linux (`navtok-linux-amd64`): same code, no tray. First run in a terminal (stdin prompts), then
+  `platform.Detach` re-execs in a new session; WoW is found in Wine/Lutris/Steam/Bottles/Heroic
+  prefixes (`wowdetect/roots_other.go`); plan B is Windows-only; `--update` replaces the button.
 * Anything uncertain about Forever goes in **VERIFY.md**; it is never assumed silently.
 
 ## Repository layout

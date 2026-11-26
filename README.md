@@ -20,6 +20,21 @@ breaks, and only once per problem.
 > Where do I get the webhook link? In Discord: *Server Settings → Integrations → Webhooks → New
 > Webhook → Copy Webhook URL*. Usually your guild officer gives it to you.
 
+## Linux (WoW through Lutris, Steam/Proton, Bottles, Heroic or Wine)
+
+1. Download **`navtok-linux-amd64`** from the [latest release](../../releases/latest) and put it
+   somewhere it can stay, e.g. `~/.local/bin/navtok`. Then make it executable:
+   `chmod +x ~/.local/bin/navtok`
+2. **Run it once in a terminal:** `~/.local/bin/navtok`. It finds WoW inside your Wine/Lutris/
+   Steam prefix, installs the addon and asks for the webhook link. If it can't find WoW, run it
+   with `--wow "<path to the Forever client folder>"`. It then continues in the background, so
+   you can close the terminal. It starts by itself at every login (`~/.config/autostart/navtok.desktop`).
+3. **Log in to WoW Forever** (or `/reload`).
+
+Differences from Windows: there is no tray icon, and problems show as desktop notifications.
+Update with `navtok --update` (then log out and in). Test with `navtok --console --dry-run`.
+Settings, state and log live in `~/.config/NAVTOK/`.
+
 ## What gets posted
 
 | Event | When |

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Builds dist/NAVTOK.exe (static, no cgo, GUI subsystem) and dist/NavtokDiscord-<version>.zip.
+# Builds dist/NAVTOK.exe (static, no cgo, GUI subsystem), dist/navtok-linux-amd64 (static) and
+# dist/NavtokDiscord-<version>.zip.
 #   ./scripts/build.sh v1.0.0
 # Private guild build with a baked-in webhook (members get zero questions):
 #   NAVTOK_DEFAULT_WEBHOOK=https://discord.com/api/webhooks/... ./scripts/build.sh v1.0.0
@@ -17,10 +18,11 @@ if [[ -n "${NAVTOK_UPDATE_REPO:-}" ]]; then
   LDFLAGS="$LDFLAGS -X ${PKG}.UpdateRepo=${NAVTOK_UPDATE_REPO}"
 fi
 GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o "$OUT/NAVTOK.exe" ./companion/cmd/navtok
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "${LDFLAGS#-H windowsgui }" -o "$OUT/navtok-linux-amd64" ./companion/cmd/navtok
 
 # addon zip (for people who want to install the addon by hand; NAVTOK.exe installs it itself)
 if [[ -z "${NAVTOK_DEFAULT_WEBHOOK:-}" ]]; then
   (cd addon && rm -f "../$OUT/NavtokDiscord-${VERSION}.zip" && zip -qr "../$OUT/NavtokDiscord-${VERSION}.zip" NavtokDiscord)
-  (cd "$OUT" && sha256sum NAVTOK.exe "NavtokDiscord-${VERSION}.zip" > SHA256SUMS.txt)
+  (cd "$OUT" && sha256sum NAVTOK.exe navtok-linux-amd64 "NavtokDiscord-${VERSION}.zip" > SHA256SUMS.txt)
 fi
 ls -la "$OUT"

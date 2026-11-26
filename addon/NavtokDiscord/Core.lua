@@ -2,7 +2,7 @@
 local ADDON, ns = ...
 
 ns.ADDON = ADDON
-ns.VERSION = "1.0.0"
+ns.VERSION = "1.1.0"
 ns.MAX_EVENTS = 300
 ns.MAX_PROBE = 1000
 

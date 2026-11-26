@@ -72,6 +72,9 @@ func Restart() error {
 	return exec.Command(exe, "--restarted").Start()
 }
 
+// Detach is not needed on Windows (NAVTOK.exe has no console window).
+func Detach() error { return nil }
+
 // Open opens a file or folder with its default application.
 func Open(path string) error {
 	return exec.Command("explorer.exe", path).Start()

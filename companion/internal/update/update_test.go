@@ -24,7 +24,7 @@ func TestLatest(t *testing.T) {
 			w.WriteHeader(404)
 			return
 		}
-		w.Write([]byte(`{"tag_name":"v1.2.0","assets":[{"name":"NAVTOK.exe","browser_download_url":"x"}]}`))
+		w.Write([]byte(`{"tag_name":"v1.2.0","assets":[{"name":"` + AssetName + `","browser_download_url":"x"}]}`))
 	}))
 	defer srv.Close()
 	APIBase = srv.URL

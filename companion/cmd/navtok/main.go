@@ -60,10 +60,24 @@ func main() {
 		wowDir    = flag.String("wow", "", "use this WoW client `folder` (skips detection)")
 		showVer   = flag.Bool("version", false, "print the version")
 		restarted = flag.Bool("restarted", false, "internal: started by an update, wait for the old process")
+		doUpdate  = flag.Bool("update", false, "download the newest NAVTOK from GitHub Releases and exit")
 	)
 	flag.Parse()
 	if *showVer {
 		fmt.Println("NAVTOK", version)
+		return
+	}
+	if *doUpdate {
+		tag, err := update.Check(context.Background(), config.UpdateRepo, version)
+		switch {
+		case err != nil:
+			fmt.Fprintln(os.Stderr, "update failed:", err)
+			os.Exit(1)
+		case tag == "":
+			fmt.Println("NAVTOK is up to date (" + version + ")")
+		default:
+			fmt.Println("updated to " + tag + "; restart NAVTOK (log out and in, or run it again) and /reload in WoW")
+		}
 		return
 	}
 	if *decode != "" {
@@ -101,6 +115,11 @@ func main() {
 		logx.Printf("config.json unreadable (%v), using defaults", err)
 	}
 	firstRun := !exists || *forceSet
+	if firstRun && !platform.Interactive() && !*dryRun && cfg.WebhookURL == "" {
+		// e.g. started from the Linux autostart entry before setup was ever done
+		platform.Notify("NAVTOK", "NAVTOK is not set up yet: run it once from a terminal.")
+		return
+	}
 	if *wowDir != "" {
 		cfg.WoWClients = []string{*wowDir}
 	}
@@ -169,7 +188,17 @@ func main() {
 	}
 
 	if firstRun && !*dryRun {
-		platform.ShowInfo("NAVTOK is set up!\n\nLog in to WoW Forever (or type /reload) to load the NavtokDiscord addon.\nNAVTOK now runs in the tray and starts with Windows - nothing else to do.")
+		if tray.Available() {
+			platform.ShowInfo("NAVTOK is set up!\n\nLog in to WoW Forever (or type /reload) to load the NavtokDiscord addon.\nNAVTOK now runs in the tray and starts with Windows - nothing else to do.")
+		} else if !*console {
+			// Linux: continue in the background so the terminal can be closed; the autostart
+			// entry starts NAVTOK at every login from now on.
+			if err := platform.Detach(); err == nil {
+				fmt.Println("NAVTOK is set up and now runs in the background (and starts at every login).")
+				fmt.Println("Log in to WoW Forever (or /reload) to load the addon. Log: " + filepath.Join(dir, "navtok.log"))
+				return
+			}
+		}
 	}
 
 	sig := make(chan os.Signal, 1)

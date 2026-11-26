@@ -2,7 +2,7 @@
 ## Title: NAVTOK DISCORD
 ## Notes: Posts your milestones (epic loot, levels, reputation, dungeons, battlegrounds...) to your guild Discord, live, with a screenshot. Needs the NAVTOK companion program.
 ## Author: NAVTOK
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariables: NavtokDiscordDB
 ## X-Website: https://github.com/vebbbbb/addon-discord
 

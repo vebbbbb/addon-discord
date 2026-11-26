@@ -11,13 +11,19 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
 
-// AssetName is the release asset that is downloaded.
-const AssetName = "NAVTOK.exe"
+// AssetName is the release asset that is downloaded for this OS.
+var AssetName = func() string {
+	if runtime.GOOS == "windows" {
+		return "NAVTOK.exe"
+	}
+	return "navtok-" + runtime.GOOS + "-" + runtime.GOARCH
+}()
 
 // Release is the subset of the GitHub API answer we use.
 type Release struct {
@@ -95,7 +101,7 @@ func Apply(ctx context.Context, c *http.Client, r *Release) error {
 		return fmt.Errorf("update: download HTTP %d", resp.StatusCode)
 	}
 	tmp := exe + ".new"
-	f, err := os.Create(tmp)
+	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o755)
 	if err != nil {
 		return err
 	}

@@ -89,8 +89,8 @@ func (c *Config) fill() {
 	}
 }
 
-// Dir returns the data directory: $NAVTOK_HOME, else %LOCALAPPDATA%\NAVTOK (Windows) or the
-// user cache dir elsewhere.
+// Dir returns the data directory: $NAVTOK_HOME, else %LOCALAPPDATA%\NAVTOK (Windows) or
+// ~/.config/NAVTOK (Linux; $XDG_CONFIG_HOME respected).
 func Dir() (string, error) {
 	if d := os.Getenv("NAVTOK_HOME"); d != "" {
 		return d, os.MkdirAll(d, 0o700)
@@ -98,7 +98,7 @@ func Dir() (string, error) {
 	base := os.Getenv("LOCALAPPDATA")
 	if base == "" || runtime.GOOS != "windows" {
 		var err error
-		if base, err = os.UserCacheDir(); err != nil {
+		if base, err = os.UserConfigDir(); err != nil {
 			return "", err
 		}
 	}
