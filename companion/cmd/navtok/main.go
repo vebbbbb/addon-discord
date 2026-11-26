@@ -98,6 +98,10 @@ func main() {
 		logx.Init(lw)
 		defer lw.Close()
 	}
+	// a crash (panic) is written to navtok.log too, so it never disappears silently
+	if cf, err := os.OpenFile(filepath.Join(dir, "navtok.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600); err == nil {
+		_ = debug.SetCrashOutput(cf, debug.CrashOptions{})
+	}
 	logx.Printf("NAVTOK %s starting (data %s)", version, dir)
 
 	wait := time.Duration(0)

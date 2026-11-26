@@ -3,8 +3,10 @@ package watcher
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -36,9 +38,11 @@ type Watcher struct {
 	cfg Config
 	fs  *fsnotify.Watcher
 
-	mu       sync.Mutex
-	seen     map[string]bool // screenshot paths already handled (or present at start)
-	svTimers map[string]*time.Timer
+	mu   sync.Mutex
+	seen map[string]bool // screenshot paths already handled (or present at start)
+
+	readErrLogged bool // only touched by rescanLoop
+	svTimers      map[string]*time.Timer
 }
 
 // RescanEvery is the safety-net interval: the Screenshots folders are also listed this often,
@@ -132,14 +136,27 @@ func (w *Watcher) isScreenshotDir(dir string) bool {
 // Run handles events until ctx is cancelled.
 func (w *Watcher) Run(ctx context.Context) {
 	defer w.fs.Close()
-	rescan := time.NewTicker(RescanEvery)
-	defer rescan.Stop()
+	defer func() {
+		if r := recover(); r != nil && w.cfg.OnLog != nil {
+			w.cfg.OnLog(fmt.Sprintf("watcher crashed: %v\n%s", r, debug.Stack()))
+		}
+	}()
+	// The folder check runs on its own goroutine: it must keep working even if the
+	// notification loop below were ever stuck.
+	go w.rescanLoop(ctx)
+	if w.cfg.OnLog != nil {
+		w.cfg.OnLog(fmt.Sprintf("watcher running (%d screenshot folder(s), folder check every %s)", len(w.cfg.ScreenshotDirs), RescanEvery))
+	}
+	// This loop only reads events and never calls back into fsnotify (no Add): on Windows
+	// fsnotify.Add waits for fsnotify's own goroutine, which waits for us to read the next event -
+	// calling Add from here deadlocks and the watcher goes deaf.
 	for {
 		select {
 		case <-ctx.Done():
+			if w.cfg.OnLog != nil {
+				w.cfg.OnLog("watcher stopped")
+			}
 			return
-		case <-rescan.C:
-			w.rescan(ctx)
 		case err, ok := <-w.fs.Errors:
 			if !ok {
 				return
@@ -163,10 +180,15 @@ func (w *Watcher) handle(ctx context.Context, ev fsnotify.Event) {
 	dir, name := filepath.Dir(ev.Name), filepath.Base(ev.Name)
 	switch {
 	case w.isAccountDir(dir):
-		// new account folder: watch it and its SavedVariables (which may not exist yet)
-		w.addAccount(ev.Name)
+		// new account folder: watch it and its SavedVariables (which may not exist yet).
+		// In a separate goroutine: never call fsnotify.Add from the event loop (see Run).
+		if ev.Has(fsnotify.Create) {
+			go w.addAccount(ev.Name)
+		}
 	case strings.EqualFold(name, "SavedVariables") && w.isAccountDir(filepath.Dir(dir)):
-		w.addSavedVarsDir(ev.Name)
+		if ev.Has(fsnotify.Create) {
+			go w.addSavedVarsDir(ev.Name)
+		}
 	case strings.EqualFold(name, SavedVarsFile):
 		w.debounceSavedVars(ev.Name)
 	case w.isScreenshotDir(dir) && IsScreenshot(name):
@@ -178,11 +200,42 @@ func (w *Watcher) handle(ctx context.Context, ev fsnotify.Event) {
 	}
 }
 
+func (w *Watcher) rescanLoop(ctx context.Context) {
+	defer func() {
+		if r := recover(); r != nil && w.cfg.OnLog != nil {
+			w.cfg.OnLog(fmt.Sprintf("folder check crashed: %v\n%s", r, debug.Stack()))
+		}
+	}()
+	rescan := time.NewTicker(RescanEvery)
+	defer rescan.Stop()
+	alive := time.NewTicker(30 * time.Minute)
+	defer alive.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-alive.C:
+			if w.cfg.OnLog != nil {
+				w.mu.Lock()
+				n := len(w.seen)
+				w.mu.Unlock()
+				w.cfg.OnLog(fmt.Sprintf("watcher alive (%d screenshots known)", n))
+			}
+		case <-rescan.C:
+			w.rescan(ctx)
+		}
+	}
+}
+
 // rescan lists the Screenshots folders and handles image files that no notification announced.
 func (w *Watcher) rescan(ctx context.Context) {
 	for _, d := range w.cfg.ScreenshotDirs {
 		entries, err := os.ReadDir(d)
 		if err != nil {
+			if w.cfg.OnLog != nil && !w.readErrLogged {
+				w.readErrLogged = true
+				w.cfg.OnLog("cannot read " + d + ": " + err.Error())
+			}
 			continue
 		}
 		for _, e := range entries {
@@ -216,6 +269,11 @@ func (w *Watcher) screenshot(ctx context.Context, path string) {
 		w.cfg.OnLog("new screenshot " + filepath.Base(path))
 	}
 	go func() {
+		defer func() {
+			if r := recover(); r != nil && w.cfg.OnLog != nil {
+				w.cfg.OnLog(fmt.Sprintf("crash while handling %s: %v\n%s", filepath.Base(path), r, debug.Stack()))
+			}
+		}()
 		if err := WaitStable(ctx, path, 25*time.Millisecond, 75*time.Millisecond, 15*time.Second); err != nil {
 			if w.cfg.OnError != nil && ctx.Err() == nil {
 				w.cfg.OnError(errors.New(filepath.Base(path) + ": " + err.Error()))
