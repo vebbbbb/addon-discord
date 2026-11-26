@@ -24,7 +24,9 @@ func ValidURL(u string) bool { return webhookRe.MatchString(strings.TrimSpace(u)
 // RateLimitError means Discord answered 429; retry after After.
 type RateLimitError struct{ After time.Duration }
 
-func (e *RateLimitError) Error() string { return fmt.Sprintf("discord: rate limited, retry after %s", e.After) }
+func (e *RateLimitError) Error() string {
+	return fmt.Sprintf("discord: rate limited, retry after %s", e.After)
+}
 
 // PermanentError will not get better by retrying (bad webhook, bad payload).
 type PermanentError struct {

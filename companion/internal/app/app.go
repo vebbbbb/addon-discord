@@ -12,6 +12,7 @@ import (
 	"image"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -157,6 +158,10 @@ func (a *App) HandleScreenshot(ctx context.Context, path string) {
 	}
 	a.Index.Add(path, shotTime, true)
 	a.HandlePayload(res.Payload, event.FromBarcode, &shot{path: path, img: img, rect: res.Rect, start: start})
+	img = nil
+	// screenshots are big (4K = 25 MB decoded); give the memory back right away so the idle
+	// footprint stays small between events
+	go debug.FreeOSMemory()
 }
 
 type shot struct {
