@@ -226,10 +226,14 @@ func Build(e *event.Event, o Options) Message {
 		em.Title = "Legacy challenge completed"
 		em.Description = mdEscape(e.Get("text"))
 		em.Color = colorLegacy
+	case "test":
+		em.Title = "NAVTOK is connected"
+		em.Description = "If you can read this, milestones from WoW Forever will show up here."
+		em.Color = colorWin
 	default:
 		em.Title = titleCase(e.Type)
 	}
-	if e.Test {
+	if e.Test && e.Type != "test" {
 		em.Title = "[TEST] " + em.Title
 	}
 	if e.Late {
