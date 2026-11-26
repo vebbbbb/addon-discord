@@ -1,0 +1,89 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install luajit
+        run: sudo apt-get update && sudo apt-get install -y luajit
+      - name: Addon tests (luajit)
+        run: luajit addon/tests/run.lua
+      - name: Barcode fixture is up to date
+        run: |
+          luajit addon/tests/gen_fixture.lua
+          git diff --exit-code addon/tests/fixtures
+      - name: Go vet (linux + windows)
+        run: |
+          go vet ./...
+          GOOS=windows go vet ./...
+      - name: Go tests
+        run: go test -count=1 ./...
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      HAS_GUILD_WEBHOOK: ${{ secrets.NAVTOK_DEFAULT_WEBHOOK != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Version
+        id: v
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"; else echo "version=dev-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"; fi
+      - name: Build NAVTOK.exe and addon zip
+        run: ./scripts/build.sh "${{ steps.v.outputs.version }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: navtok-${{ steps.v.outputs.version }}
+          path: dist/*
+      # Private guild build: the webhook is baked in, so members are asked nothing.
+      # Never attached to the public release - workflow artifact only.
+      - name: Guild build (default webhook from secret)
+        if: env.HAS_GUILD_WEBHOOK == 'true'
+        env:
+          NAVTOK_DEFAULT_WEBHOOK: ${{ secrets.NAVTOK_DEFAULT_WEBHOOK }}
+        run: |
+          mkdir -p dist-guild
+          NAVTOK_OUT=dist-guild ./scripts/build.sh "${{ steps.v.outputs.version }}"
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_GUILD_WEBHOOK == 'true'
+        with:
+          name: navtok-guild-${{ steps.v.outputs.version }}
+          path: dist-guild/NAVTOK.exe
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: navtok-v*
+          merge-multiple: true
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/NAVTOK.exe
+            dist/NavtokDiscord-*.zip
+            dist/SHA256SUMS.txt
+          generate_release_notes: true
