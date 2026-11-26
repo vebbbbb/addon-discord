@@ -46,9 +46,18 @@ local function itemIdOf(link)
   return tonumber(link:match("item:(%d+)"))
 end
 
+-- Roll patterns are not anchored at the start: Forever's chat shows them as "[Loot]: You won: X".
 local function pattern(global)
   local fmt = _G[global]
-  if type(fmt) == "string" then return ns.FormatToPattern(fmt) end
+  if type(fmt) == "string" then return (ns.FormatToPattern(fmt):gsub("^%^", "")) end
+end
+
+-- "Veb" and "Veb Ragnvaldjord" (Forever shows surnames in roll messages) are the same player.
+local function isMe(who)
+  if type(who) ~= "string" then return false end
+  local me = ns.playerName or ""
+  return who == me or who:sub(1, #me + 1) == me .. " " or who:sub(1, #me + 1) == me .. "-"
+    or who == (YOU or "You") or who == "you"
 end
 
 function N:RollPatterns()
@@ -82,7 +91,7 @@ function N:HandleRoll(msg)
     local roll, link, who = msg:match(pat)
     if roll and link then
       local id = itemIdOf(link)
-      if id and (who == ns.playerName or who == (YOU or "You") or who == "you") then
+      if id and isMe(who) then
         self.rollValues[id] = tonumber(roll)
       end
       return true

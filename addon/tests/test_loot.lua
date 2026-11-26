@@ -110,3 +110,19 @@ H.test("loot: someone else winning the item you needed is not posted", function(
   W.Fire("CHAT_MSG_LOOT", "Bob won: " .. boots)
   H.eq(#H.EventsOfType(ns, "loot"), 0)
 end)
+
+H.test("loot: need win with Forever chat format ([Loot]: prefix, full name with surname)", function()
+  local ns = H.Boot()
+  local legs = "|cff0070dd|Hitem:2100::::::::60:::::|h[Leggings of Frenzied Magic]|h|r"
+  W.items[2100] = { name = "Leggings of Frenzied Magic", quality = 3, equipLoc = "INVTYPE_LEGS" }
+  W.Fire("CHAT_MSG_LOOT", "[Loot]: Jopindo Moonblade has selected Greed for: " .. legs)
+  W.Fire("CHAT_MSG_LOOT", "[Loot]: You have selected Need for: " .. legs)
+  W.Fire("CHAT_MSG_LOOT", "[Loot]: Need Roll - 84 for " .. legs .. " by Testchar Ragnvaldjord")
+  W.Fire("CHAT_MSG_LOOT", "[Loot]: You won: " .. legs)
+  W.Fire("CHAT_MSG_LOOT", "You receive loot: " .. legs .. ".")
+  local ev = H.EventsOfType(ns, "loot")
+  H.eq(#ev, 1)
+  H.contains(ev[1].raw, '"roll":"need"')
+  H.contains(ev[1].raw, '"rollValue":84')
+  H.contains(ev[1].raw, '"item":"Leggings of Frenzied Magic"')
+end)
