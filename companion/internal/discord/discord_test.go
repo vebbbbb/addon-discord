@@ -294,3 +294,11 @@ func (r rewrite) RoundTrip(req *http.Request) (*http.Response, error) {
 	nr, _ := http.NewRequest(req.Method, u, req.Body)
 	return http.DefaultTransport.RoundTrip(nr)
 }
+
+func TestDungeonSummaryEmbed(t *testing.T) {
+	e := ev("dungeon", map[string]string{"encounter": "Withermaw", "instance": "Blackmaw Hold", "bosses": "5", "duration": "2040", "shotSeq": "7"})
+	em := Build(e, Options{}).Embeds[0]
+	if em.Title != "Blackmaw Hold: 5 bosses defeated" || em.Description != "Last: Withermaw" || len(em.Fields) != 2 || em.Fields[0].Value != "34m 00s" {
+		t.Fatalf("%+v", em)
+	}
+}

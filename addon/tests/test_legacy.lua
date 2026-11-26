@@ -45,3 +45,20 @@ H.test("legacy: system-message fallback only when ACHIEVEMENT_EARNED does not ex
   H.eq(#ev, 1)
   H.contains(ev[1].raw, '"text":"Legacy challenge complete: Explorer"')
 end)
+
+H.test("legacy: achievement added by a later patch posts via its category", function()
+  local ns = H.Boot()
+  W.achievements[70001] = "Master of the Barrow Deeps"
+  W.achievementCategory[70001] = 70000
+  W.categories[70000] = { title = "Raids", parent = 15594 }
+  W.categories[15594] = { title = "Raids", parent = -1 }
+  W.achievements[70002] = "Some normal achievement"
+  W.achievementCategory[70002] = 92
+  W.categories[92] = { title = "General", parent = -1 }
+  W.Fire("ACHIEVEMENT_EARNED", 70001)
+  W.Fire("ACHIEVEMENT_EARNED", 70002)
+  local ev = H.EventsOfType(ns, "legacy")
+  H.eq(#ev, 1)
+  H.contains(ev[1].raw, '"text":"Master of the Barrow Deeps"')
+  H.contains(ev[1].raw, '"group":"Raids"')
+end)

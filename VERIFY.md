@@ -72,22 +72,21 @@ screenshot and run `--decode` on it; a module size far from 8 px points to item 
 If WoW buffers the file and writes it later, the latency target moves. Nothing breaks: the
 watcher waits for a complete JPEG.
 
-## 4. `ENCOUNTER_END` fires in dungeons; final bosses are right
+## 4. `ENCOUNTER_END` fires in dungeons and raids; summaries work
 
 - [ ] **Result:** ______
 
-The encounter ids now come from Forever's own client database (build 1.60.1.71139, via
-`scripts/gen_data.py`), so they are real. Two things still need checking in game:
-1. With the probe on, kill a dungeon's final boss. `ENCOUNTER_END(id, name, difficulty, size, 1)`
-   must appear and a post must follow. If only `BOSS_KILL(id, name)` fires, add a `BOSS_KILL`
-   handler in `Notifiers/Dungeon.lua` with the same table lookup.
-2. The final boss of the **15 new Forever instances** (marked `verified = false` in
-   `Data/Dungeons.lua`: Dalaran, The Drowned City, Blackmaw Hold, Alcaz Prison, Excavation Site:
-   Wetlands, Ruins of Lordaeron, The Shaper's Terrace, Krol'dok Stronghold, The Hall of Thanes,
-   Karazhan Crypts, Demon Fall Canyon, Scarlet Enclave and the world-boss raids) was taken as the
-   boss with the highest encounter order. If a different boss is last, put it in `KNOWN_FINAL` in
-   `scripts/gen_data.py` and re-run it.
-3. After a Forever patch, run `python3 scripts/gen_data.py` to pick up new instances.
+Final-boss ids come from Forever's own client database (`scripts/gen_data.py`). Every other
+instance (new Forever dungeons and raids) gets a summary post when you leave.
+1. With the probe on, kill a known final boss (e.g. Edwin VanCleef). `ENCOUNTER_END(id, name,
+   difficulty, size, 1)` must appear and a post must follow within seconds. If only
+   `BOSS_KILL(id, name)` fires, add a `BOSS_KILL` handler in `Notifiers/Dungeon.lua`.
+2. In a new Forever dungeon, kill a few bosses and leave. Expect no post per boss (navtok.log:
+   `kept candidate screenshot ...`), then one post "<Dungeon>: N bosses defeated" with the
+   screenshot of the last boss kill.
+3. Check that `GetInstanceInfo()` returns the instance name and type `party`/`raid` (the probe's
+   `PLAYER_ENTERING_WORLD` lines show `IsInInstance`).
+4. After a Forever patch, run `python3 scripts/gen_data.py` so new final bosses post instantly.
 
 ## 5. `GetBattlefieldWinner()` / `GetBattlefieldScore()` in Forever battlegrounds
 

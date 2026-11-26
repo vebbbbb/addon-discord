@@ -29,7 +29,7 @@ breaks, and only once per problem.
 | Level | you level up (screenshot catches the level-up glow) |
 | Reputation | you reach Friendly, Honored, Revered or Exalted with a faction |
 | Death | you die (zone, and the killer when it can be told) |
-| Dungeon | you kill the final boss of a dungeon (or dungeon wing) or raid, including Forever's new instances |
+| Dungeon / raid | you kill a known final boss (instant post), or, for anything else such as new Forever dungeons and raids, one summary when you leave ("Blackmaw Hold: 5 bosses defeated") with the screenshot of the last boss kill |
 | Rare | you kill a rare or rare-elite mob |
 | Battleground | a battleground ends: win or loss, duration, your kills, deaths and honor |
 | Legacy | you complete a legacy challenge (all 176 from the game data: Classes, Tradeskills, Dungeons, Raids, PvP, Adventure) |

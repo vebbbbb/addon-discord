@@ -19,16 +19,34 @@ function N:Post(data)
   ns.Emit("legacy", data)
 end
 
+-- For achievements added after Data/Legacy.lua was generated: is it in a legacy category?
+function N:Dynamic(id)
+  if not (GetAchievementCategory and GetCategoryInfo and ns.Data.LegacyRoots) then return nil end
+  local ok, cat = pcall(GetAchievementCategory, id)
+  local sub
+  for _ = 1, 5 do
+    if not ok or not cat or cat == -1 then return nil end
+    local title, parent = GetCategoryInfo(cat)
+    sub = sub or title
+    if ns.Data.LegacyRoots[cat] then
+      local root = title or ns.Data.LegacyRoots[cat]
+      return { group = (sub and sub ~= root) and (root .. ": " .. sub) or root }
+    end
+    cat = parent
+  end
+end
+
 function N:OnAchievement(achievementID)
   local id = tonumber(achievementID)
-  local entry = id and ns.Data.Legacy and ns.Data.Legacy[id]
+  local entry = id and ns.Data.Legacy and ns.Data.Legacy[id] or (id and self:Dynamic(id))
   if not entry then return end
   if entry.zone and not settings().legacyZones then return end
-  local name = entry.name
+  local name = entry.name or ("Challenge " .. id)
   if GetAchievementInfo then
     local ok, _, localized = pcall(GetAchievementInfo, id)
     if ok and type(localized) == "string" and localized ~= "" then name = localized end
   end
+  if name:find("^Hidden") then return end
   -- the same challenge exists twice in the data (two flag variants): dedupe by name too
   local now = GetTime()
   if self.recent["n" .. name] and now - self.recent["n" .. name] < 10 then return end

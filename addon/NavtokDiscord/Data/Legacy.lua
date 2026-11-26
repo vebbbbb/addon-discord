@@ -183,4 +183,15 @@ ns.Data.Legacy = {
   [64032] = { name = "Field of Honor: Week 7", group = "Player vs. Player: Season Journey" },
   [64033] = { name = "Field of Honor: Week 10", group = "Player vs. Player: Season Journey" },
 }
+
+-- legacy root categories: achievements earned in these (incl. sub-categories) that are not
+-- listed above (added by a later patch) are still posted, via GetAchievementCategory.
+ns.Data.LegacyRoots = {
+  [15568] = "Classes",
+  [15586] = "Tradeskills",
+  [15593] = "Dungeons",
+  [15594] = "Raids",
+  [15595] = "Player vs. Player",
+  [15596] = "Adventure",
+}
 ns.Data.LegacyBuild = "1.60.1.71139"

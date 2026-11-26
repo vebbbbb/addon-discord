@@ -18,6 +18,9 @@ function W.Reset()
   W.target = nil                  -- { name, hostile, guid, classification, level, dead, tapDenied }
   W.units = {}                    -- other unit tokens (mouseover, nameplate1...) -> same shape
   W.achievements = {}             -- id -> localized name
+  W.achievementCategory = {}      -- id -> category id
+  W.categories = {}               -- category id -> { title, parent }
+  W.instance = nil                -- { name, type ("party"/"raid"), mapId }
   W.items = {}                    -- link or id -> { name, quality } ; missing = uncached
   W.factions = {}                 -- list of { name, standingID, isHeader, hasRep, factionID }
   W.bg = { winner = nil, status = {}, scores = {}, runtime = 0, instance = { false, "none" } }
@@ -167,7 +170,17 @@ function GetPhysicalScreenSize() return W.screenSize[1], W.screenSize[2] end
 function GetScreenWidth() return 1024 end
 function GetScreenHeight() return 768 end
 function GetCVar() return nil end
-function IsInInstance() return W.bg.instance[1], W.bg.instance[2] end
+function IsInInstance()
+  if W.instance then return true, W.instance.type end
+  return W.bg.instance[1], W.bg.instance[2]
+end
+function GetInstanceInfo()
+  local i = W.instance
+  if not i then return GetRealZoneText(), "none", 0, "", 0, 0, false, 0 end
+  return i.name, i.type, 1, "Normal", 5, 0, false, i.mapId
+end
+function GetAchievementCategory(id) return W.achievementCategory[id] or -1 end
+function GetCategoryInfo(cat) local c = W.categories[cat] if c then return c.title, c.parent end end
 
 function Screenshot()
   if W.screenshotError then error(W.screenshotError) end

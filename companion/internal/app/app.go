@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -180,10 +181,27 @@ func (a *App) HandlePayload(p []byte, src event.Source, s *shot) {
 	}
 	e.Source = src
 	a.enrich(e)
+	if e.Candidate {
+		// a dungeon boss kill kept for the summary post that comes when the player leaves
+		if s != nil {
+			r := s.rect
+			c := state.Candidate{Path: s.path, Rect: [4]int{r.Min.X, r.Min.Y, r.Max.X, r.Max.Y}, At: a.now().Unix()}
+			if err := a.State.AddCandidate(event.CandidateKey(e.Char, e.Seq), c); err != nil {
+				logx.Printf("state: %v", err)
+			}
+			logx.Printf("kept candidate screenshot %s for %s", filepath.Base(s.path), e.Key())
+		}
+		return
+	}
 	if a.skip(e) || !a.State.Claim(e) {
 		return
 	}
 	var jpg []byte
+	if e.Get("shotSeq") != "" {
+		// summary post: use the screenshot of the last boss kill, not the one taken on leaving
+		jpg, _ = a.candidateImage(e, nil)
+		s = nil
+	}
 	if s != nil {
 		jpg, _, err = imageproc.Process(s.img, s.rect, a.Cfg.BarcodeRemoval, a.Cfg.MaxImageWidth, a.Cfg.JPEGQuality)
 		if err != nil {
@@ -245,11 +263,15 @@ func (a *App) HandleSavedVars(ctx context.Context, path string) {
 	installed := a.State.InstalledAt()
 	oldest := now.Add(-time.Duration(a.Cfg.LateWindowHours) * time.Hour).Unix()
 	recheck := false
-	var pending []*event.Event
+	var pending, candidates []*event.Event
 	for _, c := range chars {
 		for _, e := range c.Events {
 			if e.Char != "" && e.Realm != "" {
 				a.chars.Store(e.Char, e.Realm)
+			}
+			if e.Candidate {
+				candidates = append(candidates, e)
+				continue
 			}
 			if e.TS < installed || e.TS < oldest || a.skip(e) || a.State.Posted(e) {
 				continue
@@ -270,7 +292,17 @@ func (a *App) HandleSavedVars(ctx context.Context, path string) {
 		}
 		e.Late = true
 		a.enrich(e)
-		jpg, shotPath := a.lateImage(e)
+		var jpg []byte
+		var shotPath string
+		if e.Get("shotSeq") != "" {
+			jpg, shotPath = a.candidateImage(e, candidates)
+		} else {
+			at := e.TS
+			if e.Shot > 0 {
+				at = e.Shot
+			}
+			jpg, shotPath = a.lateImage(at, e.ID)
+		}
 		logx.Printf("late event %s (%s), screenshot: %q", e.Key(), e.Type, filepath.Base(shotPath))
 		a.enqueue(e, jpg, shotPath, now)
 	}
@@ -283,12 +315,40 @@ func (a *App) HandleSavedVars(ctx context.Context, path string) {
 	}
 }
 
-// lateImage finds and prepares the screenshot of a late event (nil when none matches).
-func (a *App) lateImage(e *event.Event) ([]byte, string) {
-	at := e.TS
-	if e.Shot > 0 {
-		at = e.Shot
+// candidateImage returns the kept screenshot a summary event points to (shotSeq): from
+// state.json, or else matched by time from the candidate event in SavedVariables.
+func (a *App) candidateImage(e *event.Event, svCandidates []*event.Event) ([]byte, string) {
+	seq, err := strconv.ParseInt(e.Get("shotSeq"), 10, 64)
+	if err != nil {
+		return nil, ""
 	}
+	if c, ok := a.State.Candidate(event.CandidateKey(e.Char, seq)); ok {
+		img, err := imageproc.Load(c.Path)
+		if err == nil {
+			rect := image.Rect(c.Rect[0], c.Rect[1], c.Rect[2], c.Rect[3])
+			if rect.Empty() {
+				rect = a.expectedRect(img.Bounds())
+			}
+			if jpg, _, err := imageproc.Process(img, rect, a.Cfg.BarcodeRemoval, a.Cfg.MaxImageWidth, a.Cfg.JPEGQuality); err == nil {
+				return jpg, c.Path
+			}
+		}
+		logx.Printf("candidate screenshot %s: %v", c.Path, err)
+	}
+	for _, c := range svCandidates {
+		if c.Seq == seq && (c.Char == e.Char || strings.HasPrefix(e.Char, c.Char) || strings.HasPrefix(c.Char, e.Char)) {
+			at := c.TS
+			if c.Shot > 0 {
+				at = c.Shot
+			}
+			return a.lateImage(at, c.ID)
+		}
+	}
+	return nil, ""
+}
+
+// lateImage finds and prepares the screenshot taken at `at` for event id (nil when none matches).
+func (a *App) lateImage(at int64, id string) ([]byte, string) {
 	tol := time.Duration(a.Cfg.MatchToleranceSec) * time.Second
 	for tries := 0; tries < 5; tries++ {
 		p := a.Index.Find(time.Unix(at, 0), tol)
@@ -302,7 +362,7 @@ func (a *App) lateImage(e *event.Event) ([]byte, string) {
 		rect := a.expectedRect(img.Bounds())
 		if res, err := barcode.Decode(img); err == nil {
 			other, perr := event.ParsePayload(res.Payload)
-			if perr == nil && other.ID != e.ID {
+			if perr == nil && other.ID != id {
 				// this screenshot belongs to a different event: never attach it here
 				a.Index.Add(p, time.Time{}, true)
 				continue

@@ -53,3 +53,15 @@ func TestParseJSONLine(t *testing.T) {
 		t.Fatal("source")
 	}
 }
+
+func TestCandidateFlag(t *testing.T) {
+	e := &Event{Type: "dungeon", Test: true, Candidate: true, TS: 5, Seq: 9, Char: "A", Data: map[string]string{"encounter": "X"}}
+	got, err := ParsePayload(EncodePayload(e))
+	if err != nil || !got.Candidate || !got.Test || CandidateKey(got.Char, got.Seq) != "A#9" {
+		t.Fatal(got, err)
+	}
+	j, _ := ParseJSON(`{"candidate":true,"char":"A","data":{},"id":"5.9","seq":9,"ts":5,"type":"dungeon"}`)
+	if !j.Candidate {
+		t.Fatal("json candidate")
+	}
+}

@@ -23,6 +23,15 @@ type file struct {
 	LastPost    string           `json:"last_post,omitempty"`
 	LastPostAt  int64            `json:"last_post_at,omitempty"`
 	AddonHash   string           `json:"addon_hash,omitempty"`
+	// Candidates: screenshots of dungeon boss kills kept for a later summary post.
+	Candidates map[string]Candidate `json:"candidates,omitempty"`
+}
+
+// Candidate is a kept screenshot and where its barcode was.
+type Candidate struct {
+	Path string `json:"path"`
+	Rect [4]int `json:"rect"` // barcode rectangle x0,y0,x1,y1 (zero = unknown)
+	At   int64  `json:"at"`
 }
 
 // Store is the thread-safe dedupe store. Claim marks an event as in flight (memory only) so the
@@ -133,6 +142,31 @@ func (s *Store) MarkPosted(e *event.Event, summary string) error {
 		}
 	}
 	return s.saveLocked()
+}
+
+// AddCandidate remembers a candidate screenshot (key from event.CandidateKey).
+func (s *Store) AddCandidate(key string, c Candidate) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.f.Candidates == nil {
+		s.f.Candidates = map[string]Candidate{}
+	}
+	s.f.Candidates[key] = c
+	cutoff := s.now().Add(-7 * 24 * time.Hour).Unix()
+	for k, v := range s.f.Candidates {
+		if v.At < cutoff {
+			delete(s.f.Candidates, k)
+		}
+	}
+	return s.saveLocked()
+}
+
+// Candidate looks up a candidate screenshot.
+func (s *Store) Candidate(key string) (Candidate, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c, ok := s.f.Candidates[key]
+	return c, ok
 }
 
 // LastPost returns the summary and time of the last post.

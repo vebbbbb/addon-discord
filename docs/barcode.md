@@ -68,7 +68,7 @@ characters are replaced by spaces.
 | # | field | example |
 |---|---|---|
 | 0 | type code | `L` |
-| 1 | flags (`T` = test event, otherwise empty) | `` |
+| 1 | flags: `T` = test event, `C` = candidate (kept by the companion, not posted) | `` |
 | 2 | `time()` of the event (unix seconds) | `1764160000` |
 | 3 | per-character sequence number | `42` |
 | 4 | character name | `Navtök` |
@@ -87,7 +87,7 @@ posted.
 | `V` | level | zone | zone |
 | `R` | reputation | faction, standing (1..8) | faction |
 | `D` | death | zone, subzone, killer | subzone, killer, zone |
-| `K` | dungeon | encounterId, encounter, instance | instance, encounter |
+| `K` | dungeon | encounterId, encounter, instance, bosses, duration, shotSeq | instance, encounter |
 | `B` | bg | bg, result (`win`/`loss`/`draw`), duration (s), kb, hk, deaths, honor | bg |
 | `G` | legacy | achievementId, text, group | group, text |
 | `E` | rare | npcId, classification, mobLevel, npc, zone, subzone | subzone, zone, npc |

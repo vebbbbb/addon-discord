@@ -19,18 +19,20 @@ const (
 
 // Event is one milestone. Data holds the type specific fields as strings.
 type Event struct {
-	ID      string            `json:"id"` // "<ts>.<seq>"
-	Type    string            `json:"type"`
-	Test    bool              `json:"test"`
-	TS      int64             `json:"ts"`
-	Seq     int64             `json:"seq"`
-	Char    string            `json:"char"`
-	Realm   string            `json:"realm,omitempty"`
-	Class   string            `json:"class,omitempty"`
-	ClassID int               `json:"classId"`
-	Level   int               `json:"level"`
-	Shot    int64             `json:"shot,omitempty"` // time() when the screenshot was taken
-	Data    map[string]string `json:"data"`
+	ID   string `json:"id"` // "<ts>.<seq>"
+	Type string `json:"type"`
+	Test bool   `json:"test"`
+	// Candidate: a screenshot kept for a later summary post (dungeon boss kill), never posted itself.
+	Candidate bool              `json:"candidate,omitempty"`
+	TS        int64             `json:"ts"`
+	Seq       int64             `json:"seq"`
+	Char      string            `json:"char"`
+	Realm     string            `json:"realm,omitempty"`
+	Class     string            `json:"class,omitempty"`
+	ClassID   int               `json:"classId"`
+	Level     int               `json:"level"`
+	Shot      int64             `json:"shot,omitempty"` // time() when the screenshot was taken
+	Data      map[string]string `json:"data"`
 
 	Source Source `json:"-"`
 	Late   bool   `json:"-"`
@@ -38,6 +40,9 @@ type Event struct {
 
 // Key identifies an event for dedupe: "<char>|<ts>.<seq>".
 func (e *Event) Key() string { return e.Char + "|" + e.ID }
+
+// CandidateKey names a candidate screenshot: "<char>#<seq>" (seq is unique per character).
+func CandidateKey(char string, seq int64) string { return fmt.Sprintf("%s#%d", char, seq) }
 
 // Get returns a data field ("" when missing).
 func (e *Event) Get(k string) string { return e.Data[k] }
@@ -63,7 +68,7 @@ var fields = map[string][]string{
 	"level":      {"zone"},
 	"reputation": {"faction", "standing"},
 	"death":      {"zone", "subzone", "killer"},
-	"dungeon":    {"encounterId", "encounter", "instance"},
+	"dungeon":    {"encounterId", "encounter", "instance", "bosses", "duration", "shotSeq"},
 	"bg":         {"bg", "result", "duration", "kb", "hk", "deaths", "honor"},
 	"legacy":     {"achievementId", "text", "group"},
 	"rare":       {"npcId", "classification", "mobLevel", "npc", "zone", "subzone"},
@@ -105,7 +110,7 @@ func ParsePayload(p []byte) (*Event, error) {
 	classID, _ := strconv.Atoi(parts[5])
 	level, _ := strconv.Atoi(parts[6])
 	e := &Event{
-		Type: t, Test: strings.Contains(parts[1], "T"), TS: ts, Seq: seq,
+		Type: t, Test: strings.Contains(parts[1], "T"), Candidate: strings.Contains(parts[1], "C"), TS: ts, Seq: seq,
 		ID: fmt.Sprintf("%d.%d", ts, seq), Char: parts[4], ClassID: classID, Level: level,
 		Class: ClassToken(classID), Data: map[string]string{}, Source: FromBarcode,
 	}
@@ -123,6 +128,9 @@ func EncodePayload(e *Event) []byte {
 	if e.Test {
 		flags = "T"
 	}
+	if e.Candidate {
+		flags += "C"
+	}
 	parts := []string{CodeOf(e.Type), flags, strconv.FormatInt(e.TS, 10), strconv.FormatInt(e.Seq, 10),
 		e.Char, strconv.Itoa(e.ClassID), strconv.Itoa(e.Level)}
 	for _, f := range fields[e.Type] {
@@ -133,18 +141,19 @@ func EncodePayload(e *Event) []byte {
 
 // rawJSON is the SavedVariables JSON line written by Core.lua.
 type rawJSON struct {
-	ID      string         `json:"id"`
-	Type    string         `json:"type"`
-	Test    bool           `json:"test"`
-	TS      int64          `json:"ts"`
-	Seq     int64          `json:"seq"`
-	Char    string         `json:"char"`
-	Realm   string         `json:"realm"`
-	Class   string         `json:"class"`
-	ClassID int            `json:"classId"`
-	Level   int            `json:"level"`
-	Shot    int64          `json:"shot"`
-	Data    map[string]any `json:"data"`
+	ID        string         `json:"id"`
+	Type      string         `json:"type"`
+	Test      bool           `json:"test"`
+	Candidate bool           `json:"candidate"`
+	TS        int64          `json:"ts"`
+	Seq       int64          `json:"seq"`
+	Char      string         `json:"char"`
+	Realm     string         `json:"realm"`
+	Class     string         `json:"class"`
+	ClassID   int            `json:"classId"`
+	Level     int            `json:"level"`
+	Shot      int64          `json:"shot"`
+	Data      map[string]any `json:"data"`
 }
 
 // ParseJSON decodes one SavedVariables event line.
@@ -159,7 +168,7 @@ func ParseJSON(line string) (*Event, error) {
 	if r.ID == "" {
 		r.ID = fmt.Sprintf("%d.%d", r.TS, r.Seq)
 	}
-	e := &Event{ID: r.ID, Type: r.Type, Test: r.Test, TS: r.TS, Seq: r.Seq, Char: r.Char, Realm: r.Realm,
+	e := &Event{ID: r.ID, Type: r.Type, Test: r.Test, Candidate: r.Candidate, TS: r.TS, Seq: r.Seq, Char: r.Char, Realm: r.Realm,
 		Class: r.Class, ClassID: r.ClassID, Level: r.Level, Shot: r.Shot, Data: map[string]string{},
 		Source: FromSavedVars}
 	if e.Class == "" {

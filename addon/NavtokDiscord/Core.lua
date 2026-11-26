@@ -206,7 +206,8 @@ end
 ns.PublicEvent = publicCopy
 
 -- Creates an event, logs it to SavedVariables and queues its screenshot.
--- opts: delay (seconds before the screenshot), priority (never dropped), test (boolean)
+-- opts: delay (seconds before the screenshot), priority (never dropped), test (boolean),
+--       candidate (screenshot is kept by the companion but not posted; see Notifiers/Dungeon.lua)
 function ns.Emit(etype, data, opts)
   opts = opts or {}
   if not ns.char then return nil end
@@ -218,6 +219,7 @@ function ns.Emit(etype, data, opts)
     ts = ts,
     seq = ns.char.seq,
     test = opts.test and true or false,
+    candidate = opts.candidate or nil,
     char = ns.playerName,
     realm = ns.realm,
     class = ns.classFile,

@@ -278,3 +278,81 @@ func TestSendTest(t *testing.T) {
 		t.Fatal("test title")
 	}
 }
+
+func coloredShot(t *testing.T, dir string, e *event.Event, c color.RGBA, withCode bool) string {
+	img := image.NewRGBA(image.Rect(0, 0, 1920, 1080))
+	draw.Draw(img, img.Bounds(), &image.Uniform{c}, image.Point{}, draw.Src)
+	if withCode {
+		g, _ := barcode.Encode(event.EncodePayload(e))
+		code := barcode.Render(g, 8, barcode.Quiet)
+		draw.Draw(img, code.Bounds().Add(image.Pt(1920-code.Bounds().Dx(), 0)), code, image.Point{}, draw.Src)
+	}
+	p := filepath.Join(dir, shotName(time.Unix(e.TS, 0)))
+	writeJPEG(t, p, img)
+	return p
+}
+
+func avgRed(t *testing.T, jpg []byte) uint32 {
+	img, err := jpeg.Decode(bytes.NewReader(jpg))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, _, _, _ := img.At(img.Bounds().Dx()/2, img.Bounds().Dy()/2).RGBA()
+	return r >> 8
+}
+
+func TestDungeonSummaryUsesLastBossScreenshot(t *testing.T) {
+	e := newEnv(t)
+	_, rec, cancel := start(t, e, config.Defaults())
+	defer cancel()
+	now := time.Now().Unix()
+	boss := &event.Event{Type: "dungeon", Candidate: true, TS: now - 2, Seq: 7, ID: fmt.Sprintf("%d.7", now-2), Char: "Navtok", ClassID: 8, Level: 60,
+		Data: map[string]string{"encounterId": "3315", "encounter": "Withermaw", "instance": "Blackmaw Hold"}}
+	coloredShot(t, e.shots, boss, color.RGBA{220, 20, 20, 255}, true) // red = inside, boss kill
+	time.Sleep(400 * time.Millisecond)
+	if rec.count() != 0 {
+		t.Fatal("candidate must not be posted")
+	}
+	sum := &event.Event{Type: "dungeon", TS: now, Seq: 8, ID: fmt.Sprintf("%d.8", now), Char: "Navtok", ClassID: 8, Level: 60,
+		Data: map[string]string{"encounter": "Withermaw", "instance": "Blackmaw Hold", "bosses": "1", "duration": "1500", "shotSeq": "7"}}
+	coloredShot(t, e.shots, sum, color.RGBA{20, 200, 20, 255}, true) // green = outside
+	p := rec.wait(t, 1, 3*time.Second)[0]
+	if p.msg.Embeds[0].Title != "Blackmaw Hold: 1 boss defeated" {
+		t.Fatalf("title %q", p.msg.Embeds[0].Title)
+	}
+	if p.img == nil || avgRed(t, p.img) < 150 {
+		t.Fatal("summary must carry the boss-kill (red) screenshot, not the exit one")
+	}
+}
+
+func TestDungeonSummaryLateFromSavedVars(t *testing.T) {
+	old := SVGrace
+	SVGrace = 0
+	defer func() { SVGrace = old }()
+	e := newEnv(t)
+	os.WriteFile(filepath.Join(e.dataDir, "state.json"), []byte(fmt.Sprintf(`{"installed_at":%d}`, time.Now().Unix()-3600)), 0o600)
+	_, rec, cancel := start(t, e, config.Defaults())
+	defer cancel()
+	now := time.Now().Unix()
+	// candidate screenshot whose barcode was unreadable (no code drawn), and no live summary
+	boss := &event.Event{TS: now - 40}
+	coloredShot(t, e.shots, boss, color.RGBA{220, 20, 20, 255}, false)
+	time.Sleep(300 * time.Millisecond)
+	js := func(id string, ts, seq, shot int64, cand bool, data string) string {
+		l := fmt.Sprintf(`{"candidate":%v,"char":"Navtok","classId":8,"data":%s,"id":"%s","level":60,"seq":%d,"shot":%d,"test":false,"ts":%d,"type":"dungeon"}`, cand, data, id, seq, shot, ts)
+		return `"` + strings.ReplaceAll(l, `"`, `\"`) + `",`
+	}
+	sv := "NavtokDiscordDB = {\n[\"chars\"] = {\n[\"Navtok-Forever\"] = {\n[\"events\"] = {\n" +
+		js(fmt.Sprintf("%d.7", now-41), now-41, 7, now-40, true, `{"encounter":"Withermaw","instance":"Blackmaw Hold"}`) + "\n" +
+		js(fmt.Sprintf("%d.8", now-20), now-20, 8, now-19, false, `{"bosses":1,"encounter":"Withermaw","instance":"Blackmaw Hold","shotSeq":7}`) +
+		"\n},\n},\n},\n}\n"
+	os.WriteFile(filepath.Join(e.sv, "NavtokDiscord.lua"), []byte(sv), 0o644)
+	p := rec.wait(t, 1, 4*time.Second)
+	time.Sleep(300 * time.Millisecond)
+	if rec.count() != 1 {
+		t.Fatalf("posts %d (candidate must not be posted)", rec.count())
+	}
+	if p[0].msg.Embeds[0].Title != "Blackmaw Hold: 1 boss defeated (late)" || p[0].img == nil || avgRed(t, p[0].img) < 150 {
+		t.Fatalf("late summary %q img=%v", p[0].msg.Embeds[0].Title, p[0].img != nil)
+	}
+}

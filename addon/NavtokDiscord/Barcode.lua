@@ -25,7 +25,7 @@ B.FIELDS = {
   level      = { "zone" },
   reputation = { "faction", "standing" },
   death      = { "zone", "subzone", "killer" },
-  dungeon    = { "encounterId", "encounter", "instance" },
+  dungeon    = { "encounterId", "encounter", "instance", "bosses", "duration", "shotSeq" },
   bg         = { "bg", "result", "duration", "kb", "hk", "deaths", "honor" },
   legacy     = { "achievementId", "text", "group" },
   rare       = { "npcId", "classification", "mobLevel", "npc", "zone", "subzone" },
@@ -91,7 +91,7 @@ function B.EncodePayload(ev)
   local code = B.TYPE_CODES[ev.type]
   if not code then error("unknown event type " .. tostring(ev.type)) end
   local header = {
-    code, ev.test and "T" or "", tostring(ev.ts or 0), tostring(ev.seq or 0),
+    code, (ev.test and "T" or "") .. (ev.candidate and "C" or ""), tostring(ev.ts or 0), tostring(ev.seq or 0),
     clean(ev.char), tostring(ev.classId or 0), tostring(ev.level or 0),
   }
   local names = B.FIELDS[ev.type]

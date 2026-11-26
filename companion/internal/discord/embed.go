@@ -197,11 +197,29 @@ func Build(e *event.Event, o Options) Message {
 		em.Color = classColor(e)
 	case "dungeon":
 		boss, inst := e.Get("encounter"), e.Get("instance")
-		em.Title = "Defeated " + boss
-		if inst != "" {
-			em.Title += " - " + inst
+		n := e.Int("bosses")
+		if e.Get("shotSeq") != "" { // summary when leaving an instance without a known final boss
+			em.Title = fmt.Sprintf("%s: %d boss", inst, n)
+			if n != 1 {
+				em.Title += "es"
+			}
+			em.Title += " defeated"
+			if boss != "" {
+				em.Description = "Last: " + mdEscape(boss)
+			}
+		} else {
+			em.Title = "Defeated " + boss
+			if inst != "" {
+				em.Title += " - " + inst
+			}
+			em.Description = "Cleared!"
 		}
-		em.Description = "Dungeon cleared!"
+		if d := e.Int("duration"); d > 0 {
+			em.Fields = append(em.Fields, EmbedField{Name: "Time", Value: fmtDuration(d), Inline: true})
+		}
+		if n > 0 {
+			em.Fields = append(em.Fields, EmbedField{Name: "Bosses", Value: fmt.Sprint(n), Inline: true})
+		}
 		em.Color = colorDungeon
 	case "bg":
 		bg := e.Get("bg")
