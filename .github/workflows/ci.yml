@@ -114,7 +114,6 @@ jobs:
                 --arg dl "https://github.com/$REPO/releases/download/$TAG" '
             ($notes | if length > 3000 then .[0:3000] + "..." else . end) as $n |
             {
-              username: "NAVTOK updates",
               allowed_mentions: { parse: [] },
               embeds: [{
                 title: ("NAVTOK " + $tag + " is out" + (if $name != "" and $name != $tag then ": " + $name else "" end)),
