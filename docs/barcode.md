@@ -89,7 +89,8 @@ posted.
 | `D` | death | zone, subzone, killer | subzone, killer, zone |
 | `K` | dungeon | encounterId, encounter, instance | instance, encounter |
 | `B` | bg | bg, result (`win`/`loss`/`draw`), duration (s), kb, hk, deaths, honor | bg |
-| `G` | legacy | text | text |
+| `G` | legacy | achievementId, text, group | group, text |
+| `E` | rare | npcId, classification, mobLevel, npc, zone, subzone | subzone, zone, npc |
 
 If the payload is longer than 96 bytes, the free-text fields in the right-hand column are
 shortened in that order, never splitting a UTF-8 sequence. The character name is shortened only

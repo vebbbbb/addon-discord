@@ -23,7 +23,8 @@ addon/NavtokDiscord/          the addon, exactly as installed (embedded into NAV
   NavtokDiscord.toc           load order
   Json.lua                    tiny deterministic JSON encoder
   Data/Classes.lua            class token -> class id
-  Data/Dungeons.lua           final bosses (ids unverified, name fallback)
+  Data/Dungeons.lua           final bosses (GENERATED from Forever DB2 by scripts/gen_data.py)
+  Data/Legacy.lua             legacy challenges = achievements (GENERATED, same script)
   Core.lua                    namespace, DB, event dispatch (ns.On), ns.Emit, ring buffer
   Barcode.lua                 payload/frame/grid encoder + pixel-perfect drawing
   Screenshot.lua              queue, rate limit, chat hiding, barcode -> Screenshot() -> hide
@@ -59,6 +60,7 @@ docs/barcode.md               barcode spec
 VERIFY.md                     checklist for the Forever beta
 .github/workflows/ci.yml      tests, build, release on tag
 scripts/build.sh              cross-compiles NAVTOK.exe and zips the addon
+scripts/gen_data.py           regenerates Data/Dungeons.lua + Data/Legacy.lua from wago.tools DB2 CSVs
 ```
 
 ## Data flow
@@ -111,9 +113,10 @@ SavedVariables JSON line (sorted keys), produced by `Core.lua` `ns.Emit`:
 | level | zone (+ top-level `level`) | PLAYER_LEVEL_UP | 0.5 s, priority |
 | reputation | faction, standing (5..8) | UPDATE_FACTION, standingID cached per faction in `char.rep`, posted on increase | 0 |
 | death | zone, subzone, killer? | PLAYER_DEAD (ignored for 3 s after login); killer = C_DeathRecap if present, else hostile target or last hostile target | 0 |
-| dungeon | encounterId, encounter, instance | ENCOUNTER_END success == 1 and `Data.FindFinalBoss` (id, else name) | 0.5 s, priority |
+| dungeon | encounterId, encounter, instance | ENCOUNTER_END success == 1 and `Data.FindFinalBoss` (Forever encounter id; English name only as fallback) | 0.5 s, priority |
 | bg | bg, result (win/loss/draw), duration, kb, hk, deaths, honor | UPDATE_BATTLEFIELD_STATUS/SCORE + GetBattlefieldWinner in a pvp instance; once per instance key (persisted in `char.bg.posted`) | ~1 s, priority |
-| legacy | text | STUB: CHAT_MSG_SYSTEM / RAID_BOSS_EMOTE matching `settings.legacyPatterns` | 0 |
+| legacy | achievementId, text, group | ACHIEVEMENT_EARNED for an id in `Data.Legacy` (localized name via GetAchievementInfo; single-zone "Explore X" steps only if `legacyZones`); fallback when the event does not exist: CHAT_MSG_SYSTEM matching `legacyPatterns` | 0 |
+| rare | npcId, classification, mobLevel, npc, zone, subzone | rare/rareelite unit (target, mouseover, nameplate) becomes dead and is not tap-denied, or CHAT_MSG_COMBAT_XP_GAIN "X dies..." for a rare seen in the last 120 s; once per GUID | 0 |
 
 Test events (`/navtok test <type>`) set `test=true`. Discord titles get a `[TEST] ` prefix and
 late posts a ` (late)` suffix.

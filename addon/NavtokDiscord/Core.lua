@@ -22,7 +22,9 @@ local DEFAULTS = {
   minInterval = 2,         -- seconds between two screenshot events (rate limit)
   lootMinQuality = 4,      -- 4 = epic
   skillMilestones = { 75, 150, 225, 300 },
-  legacyPatterns = { "[Ll]egacy.-[Cc]omplete", "[Cc]omplete.-[Ll]egacy" },
+  legacyZones = true,      -- also post single-zone "Explore <zone>" legacy steps
+  legacyPatterns = { "[Ll]egacy.-[Cc]omplete", "[Cc]omplete.-[Ll]egacy" }, -- fallback only
+  rareClassifications = { rare = true, rareelite = true },
 }
 ns.DEFAULTS = DEFAULTS
 

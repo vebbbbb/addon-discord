@@ -39,7 +39,9 @@ func TestEmbedsPerType(t *testing.T) {
 		{ev("dungeon", map[string]string{"encounter": "Edwin VanCleef", "instance": "The Deadmines"}), "Defeated Edwin VanCleef - The Deadmines", colorDungeon},
 		{ev("bg", map[string]string{"bg": "Warsong Gulch", "result": "win", "kb": "7", "duration": "1234"}), "Victory in Warsong Gulch", colorWin},
 		{ev("bg", map[string]string{"bg": "Arathi Basin", "result": "loss"}), "Defeat in Arathi Basin", colorLoss},
-		{ev("legacy", map[string]string{"text": "Explorer"}), "Legacy challenge completed", colorLegacy},
+		{ev("legacy", map[string]string{"achievementId": "62382", "text": "Explorer", "group": "Adventure"}), "Legacy challenge: Explorer", colorLegacy},
+		{ev("rare", map[string]string{"npcId": "522", "classification": "rareelite", "mobLevel": "35", "npc": "Mor'Ladim", "zone": "Duskwood"}), "Killed Mor'Ladim", colorRareElite},
+		{ev("rare", map[string]string{"npc": "Kurmokk", "classification": "rare"}), "Killed Kurmokk", colorRare},
 	}
 	for _, c := range cases {
 		m := Build(c.e, o)
@@ -60,6 +62,13 @@ func TestEmbedsPerType(t *testing.T) {
 	loot := Build(cases[0].e, o).Embeds[0]
 	if loot.URL != "https://www.wowhead.com/classic/item=19019" {
 		t.Errorf("wowhead link %q", loot.URL)
+	}
+	rare := Build(cases[10].e, o).Embeds[0]
+	if rare.URL != "https://www.wowhead.com/classic/npc=522" || rare.Description != "Rare Elite, level 35 - Duskwood" {
+		t.Errorf("rare %q %q", rare.URL, rare.Description)
+	}
+	if l := Build(cases[9].e, o).Embeds[0]; l.URL != "https://www.wowhead.com/classic/achievement=62382" || l.Description != "Adventure" {
+		t.Errorf("legacy %q %q", l.URL, l.Description)
 	}
 	bg := Build(cases[7].e, o).Embeds[0]
 	if len(bg.Fields) != 2 || bg.Fields[1].Value != "20m 34s" {

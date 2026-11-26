@@ -12,7 +12,7 @@ P.EVENTS = {
   "SCREENSHOT_SUCCEEDED", "SCREENSHOT_FAILED", "SCREENSHOT_STARTED",
   "CHAT_MSG_LOOT", "GET_ITEM_INFO_RECEIVED", "CHAT_MSG_SKILL", "PLAYER_LEVEL_UP",
   "UPDATE_FACTION", "CHAT_MSG_COMBAT_FACTION_CHANGE", "PLAYER_DEAD",
-  "ENCOUNTER_START", "ENCOUNTER_END", "BOSS_KILL",
+  "ENCOUNTER_START", "ENCOUNTER_END", "BOSS_KILL", "PLAYER_TARGET_CHANGED",
   "UPDATE_BATTLEFIELD_STATUS", "UPDATE_BATTLEFIELD_SCORE",
   "CHAT_MSG_SYSTEM", "CHAT_MSG_BG_SYSTEM_NEUTRAL", "CHAT_MSG_BG_SYSTEM_ALLIANCE",
   "CHAT_MSG_BG_SYSTEM_HORDE", "RAID_BOSS_EMOTE",
@@ -20,6 +20,7 @@ P.EVENTS = {
   -- speculative: candidates for Forever's legacy point challenges (VERIFY.md item 7)
   "ACHIEVEMENT_EARNED", "CRITERIA_UPDATE", "CRITERIA_EARNED", "QUEST_TURNED_IN",
   "LEGACY_POINTS_UPDATED", "LEGACY_CHALLENGE_COMPLETED", "CHALLENGE_COMPLETED",
+  "CHAT_MSG_COMBAT_XP_GAIN", "NAME_PLATE_UNIT_ADDED",
 }
 
 local function stamp()
@@ -84,6 +85,15 @@ local AFTER = {
       P.Log("GetFactionInfo(" .. i .. ") -> " .. safe(GetFactionInfo, i))
     end
   end,
+  ACHIEVEMENT_EARNED = function()
+    P.Log("GetAchievementInfo -> " .. type(GetAchievementInfo))
+  end,
+  PLAYER_TARGET_CHANGED = function()
+    if UnitExists and UnitExists("target") then
+      P.Log("target " .. safe(UnitName, "target") .. " class=" .. safe(UnitClassification, "target") ..
+        " guid=" .. safe(UnitGUID, "target") .. " tapDenied=" .. safe(UnitIsTapDenied, "target"))
+    end
+  end,
   PLAYER_DEAD = function()
     P.Log("target -> " .. safe(UnitName, "target") .. " canAttack=" .. safe(UnitCanAttack, "player", "target"))
     P.Log("C_DeathRecap -> " .. tostring(C_DeathRecap ~= nil))
@@ -122,7 +132,8 @@ function P.Environment()
   end
   for _, api in ipairs({ "Screenshot", "C_Timer", "GetPhysicalScreenSize", "C_DeathRecap",
     "GetBattlefieldWinner", "GetBattlefieldScore", "GetBattlefieldInstanceRunTime",
-    "RequestBattlefieldScoreData", "GetFactionInfo", "C_Reputation", "GetItemInfo", "C_Item" }) do
+    "RequestBattlefieldScoreData", "GetFactionInfo", "C_Reputation", "GetItemInfo", "C_Item",
+    "GetAchievementInfo", "UnitClassification", "UnitGUID", "UnitIsTapDenied", "C_NamePlate" }) do
     P.Log("API " .. api .. " -> " .. type(_G[api]))
   end
   local unknown = {}

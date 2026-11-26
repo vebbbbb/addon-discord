@@ -56,7 +56,7 @@ func Defaults() Config {
 		MaxImageWidth:     1920,
 		JPEGQuality:       85,
 		BarcodeRemoval:    "crop",
-		WowheadBase:       "https://www.wowhead.com/classic",
+		WowheadBase:       "https://www.wowhead.com/forever",
 		AutoStart:         true,
 	}
 }

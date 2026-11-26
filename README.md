@@ -29,9 +29,10 @@ breaks, and only once per problem.
 | Level | you level up (screenshot catches the level-up glow) |
 | Reputation | you reach Friendly, Honored, Revered or Exalted with a faction |
 | Death | you die (zone, and the killer when it can be told) |
-| Dungeon | you kill a dungeon's or raid's final boss |
+| Dungeon | you kill the final boss of a dungeon (or dungeon wing) or raid, including Forever's new instances |
+| Rare | you kill a rare or rare-elite mob |
 | Battleground | a battleground ends: win or loss, duration, your kills, deaths and honor |
-| Legacy | a legacy point challenge is completed (experimental) |
+| Legacy | you complete a legacy challenge (all 176 from the game data: Classes, Tradeskills, Dungeons, Raids, PvP, Adventure) |
 
 Chat is hidden for the one frame the screenshot is taken, so whispers never end up in Discord.
 
@@ -40,7 +41,7 @@ Chat is hidden for the one frame the screenshot is taken, so whispers never end 
 | Command | |
 |---|---|
 | `/navtok` | status |
-| `/navtok test <type>` | post a fake event (marked TEST). Types: loot, skill, level, reputation, death, dungeon, bg, legacy |
+| `/navtok test <type>` | post a fake event (marked TEST). Types: loot, skill, level, reputation, death, dungeon, bg, legacy, rare |
 | `/navtok position tl\|tr\|bl\|br` | move the barcode to another screen corner (default top-right) |
 | `/navtok chat on\|off` | hide chat in screenshots (default on) |
 | `/navtok debug` | debug messages |

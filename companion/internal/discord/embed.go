@@ -86,6 +86,9 @@ const (
 	colorDungeon = 0x9B59B6
 	colorSkill   = 0xE67E22
 	colorLegacy  = 0xF1C40F
+	// rare / rare elite (silver dragon, gold dragon portraits)
+	colorRare      = 0xC0C0C0
+	colorRareElite = 0xE5B53A
 )
 
 // Options influence message building.
@@ -223,9 +226,46 @@ func Build(e *event.Event, o Options) Message {
 			em.Fields = append(em.Fields, EmbedField{Name: "Duration", Value: fmtDuration(d), Inline: true})
 		}
 	case "legacy":
-		em.Title = "Legacy challenge completed"
-		em.Description = mdEscape(e.Get("text"))
+		em.Title = "Legacy challenge: " + e.Get("text")
+		if g := e.Get("group"); g != "" {
+			em.Description = mdEscape(g)
+		}
+		if id := e.Get("achievementId"); id != "" && id != "0" && wowhead != "" {
+			em.URL = wowhead + "/achievement=" + id
+		}
 		em.Color = colorLegacy
+	case "rare":
+		npc := e.Get("npc")
+		em.Title = "Killed " + npc
+		kind := "Rare"
+		switch e.Get("classification") {
+		case "rareelite":
+			kind = "Rare Elite"
+			em.Color = colorRareElite
+		case "worldboss":
+			kind = "World Boss"
+			em.Color = colorDungeon
+		default:
+			em.Color = colorRare
+		}
+		if lvl := e.Int("mobLevel"); lvl > 0 {
+			kind += fmt.Sprintf(", level %d", lvl)
+		}
+		where := e.Get("subzone")
+		if z := e.Get("zone"); z != "" && z != where {
+			if where != "" {
+				where += ", " + z
+			} else {
+				where = z
+			}
+		}
+		em.Description = kind
+		if where != "" {
+			em.Description += " - " + mdEscape(where)
+		}
+		if id := e.Get("npcId"); id != "" && id != "0" && wowhead != "" {
+			em.URL = wowhead + "/npc=" + id
+		}
 	case "test":
 		em.Title = "NAVTOK is connected"
 		em.Description = "If you can read this, milestones from WoW Forever will show up here."

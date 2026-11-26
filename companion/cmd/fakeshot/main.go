@@ -38,7 +38,8 @@ func main() {
 		"death":      {"zone": "Stranglethorn Vale", "subzone": "Booty Bay", "killer": "Bloodsail Swashbuckler"},
 		"dungeon":    {"encounterId": "0", "encounter": "Edwin VanCleef", "instance": "The Deadmines"},
 		"bg":         {"bg": "Warsong Gulch", "result": "win", "duration": "1234", "kb": "7", "hk": "31", "deaths": "2", "honor": "412"},
-		"legacy":     {"text": "Legacy challenge complete: Explorer"},
+		"legacy":     {"achievementId": "62382", "text": "Explorer", "group": "Adventure"},
+		"rare":       {"npcId": "522", "classification": "rareelite", "mobLevel": "35", "npc": "Mor'Ladim", "zone": "Duskwood", "subzone": "Tranquil Gardens Cemetery"},
 	}
 	data, ok := samples[*typ]
 	if !ok {

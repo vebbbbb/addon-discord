@@ -9,6 +9,7 @@
 Json.lua
 Data\Classes.lua
 Data\Dungeons.lua
+Data\Legacy.lua
 Core.lua
 Barcode.lua
 Screenshot.lua
@@ -21,4 +22,5 @@ Notifiers\Death.lua
 Notifiers\Dungeon.lua
 Notifiers\Battleground.lua
 Notifiers\Legacy.lua
+Notifiers\Rare.lua
 Commands.lua

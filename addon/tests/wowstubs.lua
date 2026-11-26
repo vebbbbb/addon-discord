@@ -15,7 +15,9 @@ function W.Reset()
   W.player = { name = "Testchar", realm = "Testrealm", class = "Warrior", classFile = "WARRIOR", classId = 1,
     level = 20, faction = "Alliance" }
   W.zone, W.subzone = "Elwynn Forest", "Goldshire"
-  W.target = nil                  -- { name, hostile }
+  W.target = nil                  -- { name, hostile, guid, classification, level, dead, tapDenied }
+  W.units = {}                    -- other unit tokens (mouseover, nameplate1...) -> same shape
+  W.achievements = {}             -- id -> localized name
   W.items = {}                    -- link or id -> { name, quality } ; missing = uncached
   W.factions = {}                 -- list of { name, standingID, isHeader, hasRep, factionID }
   W.bg = { winner = nil, status = {}, scores = {}, runtime = 0, instance = { false, "none" } }
@@ -128,15 +130,33 @@ end
 -------------------------------------------------------------------------------
 -- Game API
 -------------------------------------------------------------------------------
+local function U(unit)
+  if unit == "target" then return W.target end
+  return W.units[unit]
+end
 function UnitName(unit)
   if unit == "player" then return W.player.name, nil end
-  if unit == "target" and W.target then return W.target.name end
-  return nil
+  local u = U(unit)
+  return u and u.name
 end
-function UnitExists(unit) return unit == "player" or (unit == "target" and W.target ~= nil) end
-function UnitCanAttack(_, unit) return unit == "target" and W.target and W.target.hostile or false end
+function UnitExists(unit) return unit == "player" or U(unit) ~= nil end
+function UnitCanAttack(_, unit) local u = U(unit) return u and u.hostile or false end
+function UnitIsPlayer(unit) local u = U(unit) return unit == "player" or (u and u.player) or false end
+function UnitGUID(unit) local u = U(unit) return u and u.guid end
+function UnitClassification(unit) local u = U(unit) return u and (u.classification or "normal") end
+function UnitIsDead(unit) local u = U(unit) return u and u.dead or false end
+function UnitIsTapDenied(unit) local u = U(unit) return u and u.tapDenied or false end
+function GetAchievementInfo(id)
+  local n = W.achievements[id]
+  if not n then return nil end
+  return id, n, 0, true
+end
 function UnitClass() return W.player.class, W.player.classFile, W.player.classId end
-function UnitLevel() return W.player.level end
+function UnitLevel(unit)
+  if unit == nil or unit == "player" then return W.player.level end
+  local u = U(unit)
+  return u and u.level or 0
+end
 function UnitFactionGroup() return W.player.faction, W.player.faction end
 function GetRealmName() return W.player.realm end
 function GetRealZoneText() return W.zone end
@@ -192,6 +212,9 @@ function RequestBattlefieldScoreData() W.bg.requested = (W.bg.requested or 0) + 
 LOOT_ITEM_SELF = "You receive loot: %s."
 LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %sx%d."
 SKILL_RANK_UP = "Your skill in %s has increased to %d."
+COMBATLOG_XPGAIN_FIRSTPERSON = "%s dies, you gain %d experience."
+COMBATLOG_XPGAIN_FIRSTPERSON_GROUP = "%s dies, you gain %d experience. (+%d group bonus)"
+COMBATLOG_XPGAIN_EXHAUSTION1 = "%s dies, you gain %d experience. (%s exp %s bonus)"
 for i, l in ipairs({ "Hated", "Hostile", "Unfriendly", "Neutral", "Friendly", "Honored", "Revered", "Exalted" }) do
   _G["FACTION_STANDING_LABEL" .. i] = l
 end
