@@ -81,6 +81,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      HAS_RELEASE_WEBHOOK: ${{ secrets.DISCORD_RELEASE_WEBHOOK != '' }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -95,3 +97,33 @@ jobs:
             dist/NavtokDiscord-*.zip
             dist/SHA256SUMS.txt
           generate_release_notes: true
+      # Announce the release in Discord. Needs the repository secret DISCORD_RELEASE_WEBHOOK
+      # (a webhook of the channel to post in). Runs only for releases published on github.com,
+      # so each release is announced once.
+      - name: Announce on Discord
+        if: github.event_name == 'release' && env.HAS_RELEASE_WEBHOOK == 'true'
+        env:
+          RELEASE_WEBHOOK: ${{ secrets.DISCORD_RELEASE_WEBHOOK }}
+          TAG: ${{ github.event.release.tag_name }}
+          NAME: ${{ github.event.release.name }}
+          NOTES: ${{ github.event.release.body }}
+          URL: ${{ github.event.release.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          jq -n --arg tag "$TAG" --arg name "$NAME" --arg notes "$NOTES" --arg url "$URL" \
+                --arg dl "https://github.com/$REPO/releases/download/$TAG" '
+            ($notes | if length > 3000 then .[0:3000] + "..." else . end) as $n |
+            {
+              username: "NAVTOK updates",
+              allowed_mentions: { parse: [] },
+              embeds: [{
+                title: ("NAVTOK " + $tag + " is out" + (if $name != "" and $name != $tag then ": " + $name else "" end)),
+                url: $url,
+                color: 5793266,
+                description: ((if $n != "" then $n + "\n\n" else "" end) +
+                  "**Already installed?** Right-click the NAVTOK tray icon -> **Check for updates**, then type `/reload` in WoW.\n" +
+                  "**Linux:** run `navtok --update`.\n" +
+                  "**New here?** Download [NAVTOK.exe](" + $dl + "/NAVTOK.exe) (Windows) or [navtok-linux-amd64](" + $dl + "/navtok-linux-amd64) and run it once."),
+                footer: { text: "NAVTOK DISCORD" }
+              }]
+            }' | curl -fsS -H "Content-Type: application/json" -d @- "$RELEASE_WEBHOOK"

@@ -107,6 +107,15 @@ your next `/reload` or logout, marked *(late)*. Nothing is ever posted twice.
 Command line: `NAVTOK.exe --setup` (enter the webhook again), `--uninstall`, `--dry-run`
 (print posts instead of sending them), `--decode <screenshot.jpg>`, `--console`.
 
+## Release announcements in Discord (for the guild officer)
+
+Every release published on GitHub can be announced in a Discord channel automatically (version,
+release notes, download links, "click Check for updates"):
+1. In Discord, create a webhook for the channel that should get the announcements.
+2. In GitHub: **Settings -> Secrets and variables -> Actions -> New repository secret**, name
+   `DISCORD_RELEASE_WEBHOOK`, value = that webhook link.
+3. Publish releases on the **Releases** page. What you write in the release description is posted.
+
 ## For developers
 
 See [CLAUDE.md](CLAUDE.md) for the architecture, [docs/barcode.md](docs/barcode.md) for the
