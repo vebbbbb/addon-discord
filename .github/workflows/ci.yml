@@ -110,6 +110,10 @@ jobs:
           URL: ${{ github.event.release.html_url }}
           REPO: ${{ github.repository }}
         run: |
+          if [[ ! "$RELEASE_WEBHOOK" =~ ^https://(canary\.|ptb\.)?discord(app)?\.com/api(/v[0-9]+)?/webhooks/[0-9]+/[A-Za-z0-9_-]+$ ]]; then
+            echo "::error::DISCORD_RELEASE_WEBHOOK is not a Discord webhook link. It must look like https://discord.com/api/webhooks/<id>/<token> (Discord: channel settings > Integrations > Webhooks > Copy Webhook URL)."
+            exit 1
+          fi
           jq -n --arg tag "$TAG" --arg name "$NAME" --arg notes "$NOTES" --arg url "$URL" \
                 --arg dl "https://github.com/$REPO/releases/download/$TAG" '
             ($notes | if length > 3000 then .[0:3000] + "..." else . end) as $n |
@@ -125,4 +129,11 @@ jobs:
                   "**New here?** Download [NAVTOK.exe](" + $dl + "/NAVTOK.exe) (Windows) or [navtok-linux-amd64](" + $dl + "/navtok-linux-amd64) and run it once."),
                 footer: { text: "NAVTOK DISCORD" }
               }]
-            }' | curl -fsS -H "Content-Type: application/json" -d @- "$RELEASE_WEBHOOK"
+            }' > payload.json
+          # ?wait=true makes Discord answer with the created message; anything else is a failure
+          answer=$(curl -fsS -H "Content-Type: application/json" -d @payload.json "$RELEASE_WEBHOOK?wait=true")
+          if ! echo "$answer" | jq -e '.id' > /dev/null 2>&1; then
+            echo "::error::Discord did not accept the announcement: ${answer:0:300}"
+            exit 1
+          fi
+          echo "Announced in Discord (message $(echo "$answer" | jq -r .id))"
