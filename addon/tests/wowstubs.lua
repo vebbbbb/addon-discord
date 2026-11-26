@@ -21,6 +21,8 @@ function W.Reset()
   W.achievementCategory = {}      -- id -> category id
   W.categories = {}               -- category id -> { title, parent }
   W.instance = nil                -- { name, type ("party"/"raid"), mapId }
+  W.popups = {}                   -- StaticPopup_Show calls: { which, arg1, data }
+  StaticPopupDialogs = {}
   W.items = {}                    -- link or id -> { name, quality } ; missing = uncached
   W.factions = {}                 -- list of { name, standingID, isHeader, hasRep, factionID }
   W.bg = { winner = nil, status = {}, scores = {}, runtime = 0, instance = { false, "none" } }
@@ -178,6 +180,18 @@ function GetInstanceInfo()
   local i = W.instance
   if not i then return GetRealZoneText(), "none", 0, "", 0, 0, false, 0 end
   return i.name, i.type, 1, "Normal", 5, 0, false, i.mapId
+end
+function UnitIsDeadOrGhost(unit) return unit == "player" and W.player.dead or false end
+function StaticPopup_Show(which, a1, a2, data)
+  local d = { which = which, arg1 = a1, data = data }
+  W.popups[#W.popups + 1] = d
+  return d
+end
+-- clicks a button of the last popup: "accept" or "cancel"
+function W.ClickPopup(button)
+  local d = W.popups[#W.popups]
+  local def = StaticPopupDialogs[d.which]
+  if button == "accept" then def.OnAccept(d, d.data) else def.OnCancel(d, d.data) end
 end
 function GetAchievementCategory(id) return W.achievementCategory[id] or -1 end
 function GetCategoryInfo(cat) local c = W.categories[cat] if c then return c.title, c.parent end end

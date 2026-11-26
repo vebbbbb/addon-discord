@@ -59,6 +59,7 @@ func main() {
 		console   = flag.Bool("console", false, "run without tray icon, log to the console")
 		wowDir    = flag.String("wow", "", "use this WoW client `folder` (skips detection)")
 		showVer   = flag.Bool("version", false, "print the version")
+		restarted = flag.Bool("restarted", false, "internal: started by an update, wait for the old process")
 	)
 	flag.Parse()
 	if *showVer {
@@ -85,7 +86,11 @@ func main() {
 	}
 	logx.Printf("NAVTOK %s starting (data %s)", version, dir)
 
-	if !platform.SingleInstance() {
+	wait := time.Duration(0)
+	if *restarted {
+		wait = 20 * time.Second
+	}
+	if !platform.SingleInstance(wait) {
 		logx.Printf("already running, exiting")
 		return
 	}
@@ -176,6 +181,24 @@ func main() {
 					platform.ShowError("The test post failed: " + err.Error())
 				}
 			})
+		},
+		OnUpdate: func() {
+			tag, err := update.Check(ctx, config.UpdateRepo, version)
+			switch {
+			case err != nil:
+				logx.Printf("update: %v", err)
+				platform.ShowError("Could not update NAVTOK: " + err.Error())
+			case tag == "":
+				platform.ShowInfo("NAVTOK is up to date (" + version + ").")
+			default:
+				logx.Printf("update: installed %s, restarting", tag)
+				platform.ShowInfo("NAVTOK was updated to " + tag + " and restarts now.\n\nType /reload in WoW to load the updated addon.")
+				if err := platform.Restart(); err != nil {
+					platform.ShowError("Please start NAVTOK again: " + err.Error())
+				}
+				cancel()
+				tray.Quit()
+			}
 		},
 		OnOpenLog: func() { _ = platform.Open(filepath.Join(dir, "navtok.log")) },
 		OnQuit:    cancel,

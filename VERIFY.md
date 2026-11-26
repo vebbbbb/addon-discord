@@ -72,21 +72,22 @@ screenshot and run `--decode` on it; a module size far from 8 px points to item 
 If WoW buffers the file and writes it later, the latency target moves. Nothing breaks: the
 watcher waits for a complete JPEG.
 
-## 4. `ENCOUNTER_END` fires in dungeons and raids; summaries work
+## 4. Dungeon and raid clears: final bosses, popup, deaths
 
 - [ ] **Result:** ______
 
-Final-boss ids come from Forever's own client database (`scripts/gen_data.py`). Every other
-instance (new Forever dungeons and raids) gets a summary post when you leave.
-1. With the probe on, kill a known final boss (e.g. Edwin VanCleef). `ENCOUNTER_END(id, name,
+The final-boss list (`Data/Dungeons.lua`) is kept by hand and uses Forever's own encounter ids.
+1. With the probe on, kill a listed final boss (e.g. Edwin VanCleef). `ENCOUNTER_END(id, name,
    difficulty, size, 1)` must appear and a post must follow within seconds. If only
    `BOSS_KILL(id, name)` fires, add a `BOSS_KILL` handler in `Notifiers/Dungeon.lua`.
-2. In a new Forever dungeon, kill a few bosses and leave. Expect no post per boss (navtok.log:
-   `kept candidate screenshot ...`), then one post "<Dungeon>: N bosses defeated" with the
-   screenshot of the last boss kill.
-3. Check that `GetInstanceInfo()` returns the instance name and type `party`/`raid` (the probe's
-   `PLAYER_ENTERING_WORLD` lines show `IsInInstance`).
-4. After a Forever patch, run `python3 scripts/gen_data.py` so new final bosses post instantly.
+2. In a dungeon whose final boss is not listed (e.g. Blackmaw Hold), kill a few bosses and
+   hearth out. Expect no post per boss (navtok.log: `kept candidate screenshot ...`), then the
+   popup "Did you complete Blackmaw Hold?". Yes -> one post with the screenshot of the last boss.
+3. Wipe, release and run back in: **no popup**. Leave alive afterwards: popup.
+4. Check `GetInstanceInfo()` / `IsInInstance` in the probe's `PLAYER_ENTERING_WORLD` lines, and
+   that the popup is not blocked while in combat.
+5. Add missing final bosses to `Data/Dungeons.lua` (`python3 scripts/gen_data.py --encounters`
+   lists the ids) and release; players click **Check for updates**.
 
 ## 5. `GetBattlefieldWinner()` / `GetBattlefieldScore()` in Forever battlegrounds
 

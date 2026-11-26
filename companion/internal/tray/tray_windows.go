@@ -9,6 +9,7 @@ import (
 // Menu callbacks.
 type Menu struct {
 	OnSendTest func()
+	OnUpdate   func()
 	OnOpenLog  func()
 	OnQuit     func()
 	// SetLastPost is filled by Run: call it to update the "Last post" entry.
@@ -25,6 +26,7 @@ func Run(m *Menu, initialLast string, ready func()) {
 		last.Disable()
 		systray.AddSeparator()
 		test := systray.AddMenuItem("Send test", "Post a test message to the Discord webhook")
+		upd := systray.AddMenuItem("Check for updates", "Download the newest NAVTOK (and addon) from GitHub")
 		logItem := systray.AddMenuItem("Open log", "Open navtok.log")
 		systray.AddSeparator()
 		quit := systray.AddMenuItem("Quit", "Stop NAVTOK")
@@ -35,6 +37,10 @@ func Run(m *Menu, initialLast string, ready func()) {
 				case <-test.ClickedCh:
 					if m.OnSendTest != nil {
 						m.OnSendTest()
+					}
+				case <-upd.ClickedCh:
+					if m.OnUpdate != nil {
+						go m.OnUpdate()
 					}
 				case <-logItem.ClickedCh:
 					if m.OnOpenLog != nil {
@@ -65,3 +71,6 @@ func lastLabel(s string) string {
 
 // Available reports whether a tray exists on this OS.
 func Available() bool { return true }
+
+// Quit closes the tray (tray.Run returns).
+func Quit() { systray.Quit() }

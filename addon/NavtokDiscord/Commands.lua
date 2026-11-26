@@ -28,7 +28,7 @@ function C.Status()
   if ns.lastEvent then
     ns.Print(("last event: %s at %s"):format(ns.lastEvent.type, date and date("%H:%M:%S", ns.lastEvent.ts) or ns.lastEvent.ts))
   end
-  ns.Print("commands: test <type> | position <tl|tr|bl|br> | chat on|off | mode screenshot|band | debug | probe [on|off|shot|clear]")
+  ns.Print("commands: test <type> | position <tl|tr|bl|br> | chat on|off | mode screenshot|band | done | debug | probe [on|off|shot|clear]")
 end
 
 function C.Test(etype)
@@ -70,6 +70,8 @@ function C.Handle(msg)
     if rest ~= "screenshot" and rest ~= "band" then ns.Print("usage: /navtok mode screenshot|band") return end
     s.mode = rest
     ns.Print("mode: " .. rest .. (rest == "band" and " (set plan_b_band_capture=true in the companion config)" or ""))
+  elseif cmd == "done" then
+    ns.notifiers.dungeon:Done()
   elseif cmd == "debug" then
     s.debug = boolArg(rest, s.debug)
     ns.Print("debug: " .. onoff(s.debug))

@@ -8,13 +8,23 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // SetAutoStart is a no-op outside Windows.
 func SetAutoStart(bool) error { return nil }
 
 // SingleInstance always succeeds outside Windows.
-func SingleInstance() bool { return true }
+func SingleInstance(time.Duration) bool { return true }
+
+// Restart starts a new process with the same binary.
+func Restart() error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	return exec.Command(exe, append([]string{"--restarted"}, os.Args[1:]...)...).Start()
+}
 
 // Open uses xdg-open.
 func Open(path string) error { return exec.Command("xdg-open", path).Start() }

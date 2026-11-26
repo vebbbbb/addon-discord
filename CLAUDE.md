@@ -10,8 +10,10 @@ webhook in real time (target: under 2 s), each with a screenshot.
 * Target client: Forever beta 1.60.1, `## Interface: 16001`, classic-era API, **Lua 5.1**.
   Bit operations use WoW's `bit` library. No third-party Lua libraries.
 * The companion **never** reads game memory, injects anything or sends input to the game.
-* Network: only the webhook URL, plus GitHub Releases when `self_update` is on (off by
-  default). No telemetry, no listening ports.
+* Network: only the webhook URL, plus GitHub Releases when the user clicks "Check for
+  updates" in the tray (or `self_update` is on, off by default). No telemetry, no listening ports.
+* Shipping data (new final bosses): edit Data/Dungeons.lua, tag `vX.Y.Z`; CI publishes
+  NAVTOK.exe; players click "Check for updates" (exe swap + restart, addon re-installed).
 * The companion writes only `%LOCALAPPDATA%\NAVTOK\{config.json,state.json,navtok.log}` and
   `<client>\Interface\AddOns\NavtokDiscord\`.
 * Anything uncertain about Forever goes in **VERIFY.md**; it is never assumed silently.
@@ -23,7 +25,7 @@ addon/NavtokDiscord/          the addon, exactly as installed (embedded into NAV
   NavtokDiscord.toc           load order
   Json.lua                    tiny deterministic JSON encoder
   Data/Classes.lua            class token -> class id
-  Data/Dungeons.lua           final bosses (GENERATED from Forever DB2 by scripts/gen_data.py)
+  Data/Dungeons.lua           final bosses (MAINTAINED BY HAND; ids via gen_data.py --encounters)
   Data/Legacy.lua             legacy challenges = achievements (GENERATED, same script)
   Core.lua                    namespace, DB, event dispatch (ns.On), ns.Emit, ring buffer
   Barcode.lua                 payload/frame/grid encoder + pixel-perfect drawing
@@ -60,7 +62,7 @@ docs/barcode.md               barcode spec
 VERIFY.md                     checklist for the Forever beta
 .github/workflows/ci.yml      tests, build, release on tag
 scripts/build.sh              cross-compiles NAVTOK.exe and zips the addon
-scripts/gen_data.py           regenerates Data/Dungeons.lua + Data/Legacy.lua from wago.tools DB2 CSVs
+scripts/gen_data.py           regenerates Data/Legacy.lua; --encounters lists boss ids per instance
 ```
 
 ## Data flow
@@ -113,7 +115,7 @@ SavedVariables JSON line (sorted keys), produced by `Core.lua` `ns.Emit`:
 | level | zone (+ top-level `level`) | PLAYER_LEVEL_UP | 0.5 s, priority |
 | reputation | faction, standing (5..8) | UPDATE_FACTION, standingID cached per faction in `char.rep`, posted on increase | 0 |
 | death | zone, subzone, killer? | PLAYER_DEAD (ignored for 3 s after login); killer = C_DeathRecap if present, else hostile target or last hostile target | 0 |
-| dungeon | encounterId, encounter, instance, bosses, duration, shotSeq | ENCOUNTER_END success: known final boss (`Data.FindFinalBoss`, Forever ids) posts at once. Any other boss kill emits a *candidate* (flag C, `candidate=true`): the companion stores its screenshot (state.json `candidates`, key `<char>#<seq>`) and never posts it. Leaving the instance (`char.run`, persisted) with no known final posted emits a summary with `shotSeq` = last candidate's seq; the companion posts it with that screenshot | 0.5 s, priority |
+| dungeon | encounterId, encounter, instance, bosses, duration, shotSeq | ENCOUNTER_END success: known final boss (`Data.FindFinalBoss`, Forever ids) posts at once. Any other boss kill emits a *candidate* (flag C, `candidate=true`): the companion stores its screenshot (state.json `candidates`, key `<char>#<seq>`) and never posts it. Leaving the instance ALIVE (`char.run`, persisted) with no known final asks via StaticPopup "Did you complete X?"; Yes emits a summary with `shotSeq` = last candidate's seq and the companion posts it with that screenshot. Leaving dead/ghost marks the run `away` (no popup); re-entering continues it; `/navtok done` asks manually | 0.5 s, priority |
 | bg | bg, result (win/loss/draw), duration, kb, hk, deaths, honor | UPDATE_BATTLEFIELD_STATUS/SCORE + GetBattlefieldWinner in a pvp instance; once per instance key (persisted in `char.bg.posted`) | ~1 s, priority |
 | legacy | achievementId, text, group | ACHIEVEMENT_EARNED for an id in `Data.Legacy` (localized name via GetAchievementInfo; single-zone "Explore X" steps only if `legacyZones`); fallback when the event does not exist: CHAT_MSG_SYSTEM matching `legacyPatterns` | 0 |
 | rare | npcId, classification, mobLevel, npc, zone, subzone | rare/rareelite unit (target, mouseover, nameplate) becomes dead and is not tap-denied, or CHAT_MSG_COMBAT_XP_GAIN "X dies..." for a rare seen in the last 120 s; once per GUID | 0 |

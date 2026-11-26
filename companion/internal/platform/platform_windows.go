@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/ncruces/zenity"
 	"golang.org/x/sys/windows"
@@ -39,14 +40,36 @@ func SetAutoStart(on bool) error {
 var mutex windows.Handle
 
 // SingleInstance returns false if another NAVTOK is already running (named mutex, no ports).
-func SingleInstance() bool {
+// wait > 0 keeps trying that long (used right after a restart, while the old process exits).
+func SingleInstance(wait time.Duration) bool {
 	name, _ := windows.UTF16PtrFromString(`Local\NAVTOK-Discord-Companion`)
-	h, err := windows.CreateMutex(nil, false, name)
-	if err != nil {
-		return !errors.Is(err, windows.ERROR_ALREADY_EXISTS)
+	deadline := time.Now().Add(wait)
+	for {
+		h, err := windows.CreateMutex(nil, false, name)
+		if err == nil {
+			mutex = h
+			return true
+		}
+		if h != 0 {
+			windows.CloseHandle(h)
+		}
+		if !errors.Is(err, windows.ERROR_ALREADY_EXISTS) {
+			return true
+		}
+		if time.Now().After(deadline) {
+			return false
+		}
+		time.Sleep(250 * time.Millisecond)
 	}
-	mutex = h
-	return true
+}
+
+// Restart starts a new NAVTOK process (after an update); the caller then quits.
+func Restart() error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	return exec.Command(exe, "--restarted").Start()
 }
 
 // Open opens a file or folder with its default application.

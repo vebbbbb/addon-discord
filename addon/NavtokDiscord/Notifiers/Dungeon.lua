@@ -1,14 +1,17 @@
--- Notifiers/Dungeon.lua: dungeon and raid clears. One simple rule:
---  * a KNOWN final boss dies (Data/Dungeons.lua, ids from the game data) -> post right away;
---  * otherwise, when you LEAVE an instance where at least one boss died, post one summary
---    ("Blackmaw Hold: 5 bosses defeated") that uses the screenshot of the last boss kill.
--- Every boss kill in such a run takes a "candidate" screenshot (flag C): the companion keeps it
--- without posting; the summary names it with shotSeq. This covers new Forever dungeons/raids and
--- skipped optional bosses without a list. The run is kept in SavedVariables (survives /reload).
+-- Notifiers/Dungeon.lua: dungeon and raid clears.
+--  * A boss on the final-boss list (Data/Dungeons.lua) dies -> post right away.
+--  * Any other boss kill takes a "candidate" screenshot (flag C): the companion keeps it but does
+--    not post it.
+--  * Leaving the instance ALIVE after killing bosses but not the final one -> an in-game popup asks
+--    whether the dungeon is complete. Yes posts a summary with the last boss screenshot (shotSeq).
+--  * Leaving dead or as a ghost (wipe, corpse run) never asks: the run stays open and continues when
+--    you run back in. `/navtok done` asks for a run that was left that way.
+-- The run lives in SavedVariables (survives /reload and relog).
 local _, ns = ...
 local N = ns.NewNotifier("dungeon")
 
 N.DELAY = 0.5
+N.POPUP = "NAVTOK_DUNGEON_DONE"
 
 local function where()
   if not GetInstanceInfo then return nil end
@@ -18,27 +21,75 @@ local function where()
   end
 end
 
+local function deadOrGhost()
+  return UnitIsDeadOrGhost and UnitIsDeadOrGhost("player") or false
+end
+
 function N:Run() return ns.char and ns.char.run end
 
--- Posts the summary of a finished run (only if no known final boss was posted for it).
-function N:Finish()
-  local run = self:Run()
-  ns.char.run = nil
-  if not run or run.done or (run.bosses or 0) == 0 or not run.lastSeq then return end
+-- Posts the summary of a run whose completion the player confirmed.
+function N:PostSummary(run)
+  if not run or run.posted then return end
+  run.posted = true
   ns.Emit("dungeon", {
     encounter = run.lastBoss, instance = run.instance, bosses = run.bosses,
     duration = math.max(0, (run.lastAt or time()) - run.start), shotSeq = run.lastSeq,
   }, { priority = true })
 end
 
+-- Asks "was <instance> complete?" for a run left without its final boss.
+function N:Ask(run)
+  if not run or run.done or run.posted or (run.bosses or 0) == 0 or not run.lastSeq then return end
+  if not (StaticPopupDialogs and StaticPopup_Show) then
+    ns.Print(run.instance .. ": " .. run.bosses .. " bosses. Type /navtok done to post it.")
+    N.pending = run
+    return
+  end
+  StaticPopupDialogs[N.POPUP] = StaticPopupDialogs[N.POPUP] or {
+    text = "NAVTOK: Did you complete %s?\nPost it to Discord?",
+    button1 = YES or "Yes",
+    button2 = NO or "No",
+    OnAccept = function(_, data) N:PostSummary(data); N.pending = nil end,
+    OnCancel = function() N.pending = nil end,
+    timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
+  }
+  N.pending = run
+  StaticPopup_Show(N.POPUP, run.instance, nil, run)
+end
+
+-- `/navtok done`: ask (again) for the last run that was left without a final boss.
+function N:Done()
+  local run = N.pending or self:Run()
+  if run and run.away and not where() then
+    ns.char.run = nil
+  end
+  if run and not run.done and not run.posted and (run.bosses or 0) > 0 then
+    self:Ask(run)
+  else
+    ns.Print("no unfinished dungeon run to post")
+  end
+end
+
 function N:Zone()
   local here = where()
   local run = self:Run()
-  if run and (not here or here.map ~= run.map) then
-    self:Finish()
-    run = nil
+  if run and here and here.map == run.map then
+    run.away = nil -- back inside (runback after a death, or /reload)
+    return
   end
-  if here and not run then
+  if run and not here then
+    if deadOrGhost() or run.away then
+      run.away = true -- died and released: wait for the runback, never ask
+      return
+    end
+    ns.char.run = nil
+    self:Ask(run) -- left alive
+    return
+  end
+  if run and here then
+    ns.char.run = nil -- a different instance: the old run is dropped silently
+  end
+  if here then
     ns.char.run = { map = here.map, instance = here.instance, kind = here.kind, start = time(), bosses = 0 }
   end
 end

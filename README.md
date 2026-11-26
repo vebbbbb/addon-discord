@@ -29,7 +29,7 @@ breaks, and only once per problem.
 | Level | you level up (screenshot catches the level-up glow) |
 | Reputation | you reach Friendly, Honored, Revered or Exalted with a faction |
 | Death | you die (zone, and the killer when it can be told) |
-| Dungeon / raid | you kill a known final boss (instant post), or, for anything else such as new Forever dungeons and raids, one summary when you leave ("Blackmaw Hold: 5 bosses defeated") with the screenshot of the last boss kill |
+| Dungeon / raid | you kill a final boss from NAVTOK's list (instant post). Left without the final boss? When you leave (alive) WoW asks *"Did you complete Blackmaw Hold?"*; **Yes** posts it with the screenshot of your last boss kill. Dying and running back never asks. |
 | Rare | you kill a rare or rare-elite mob |
 | Battleground | a battleground ends: win or loss, duration, your kills, deaths and honor |
 | Legacy | you complete a legacy challenge (all 176 from the game data: Classes, Tradeskills, Dungeons, Raids, PvP, Adventure) |
@@ -44,10 +44,13 @@ Chat is hidden for the one frame the screenshot is taken, so whispers never end 
 | `/navtok test <type>` | post a fake event (marked TEST). Types: loot, skill, level, reputation, death, dungeon, bg, legacy, rare |
 | `/navtok position tl\|tr\|bl\|br` | move the barcode to another screen corner (default top-right) |
 | `/navtok chat on\|off` | hide chat in screenshots (default on) |
+| `/navtok done` | ask "dungeon complete?" for a run you left by dying (no popup appears then) |
 | `/navtok debug` | debug messages |
 | `/navtok probe` | diagnostics for testers (see VERIFY.md) |
 
-Tray menu: **Last post**, **Send test**, **Open log**, **Quit**.
+Tray menu: **Last post**, **Send test**, **Check for updates**, **Open log**, **Quit**.
+**Check for updates** downloads the newest NAVTOK from GitHub (new final bosses, fixes) and
+restarts it; type `/reload` in WoW afterwards.
 
 ## How it works
 
@@ -63,7 +66,8 @@ your next `/reload` or logout, marked *(late)*. Nothing is ever posted twice.
 ## Privacy and safety
 
 * NAVTOK talks to **one** address: your Discord webhook. It sends no telemetry and opens no
-  ports. A self-update from GitHub Releases exists but is off unless you switch it on.
+  ports. GitHub is contacted only when you click **Check for updates** (or switch on
+  `self_update`).
 * It never reads game memory, never injects anything and never sends keys or clicks to the
   game. It only reads the screenshots WoW saves and the addon's own saved data.
 * It writes files only to `%LOCALAPPDATA%\NAVTOK` (settings, posted-event list and a log capped
@@ -82,7 +86,7 @@ your next `/reload` or logout, marked *(late)*. Nothing is ever posted twice.
 | `barcode_removal` | `crop` | `crop`, `fill` or `none` |
 | `max_image_width` / `jpeg_quality` | `1920` / `85` | |
 | `plan_b_band_capture` / `band_corner` | `false` / `top-right` | fallback mode, see VERIFY.md item 1 |
-| `self_update` | `false` | check GitHub Releases for new versions |
+| `self_update` | `false` | also check GitHub Releases automatically at start (the tray button always works) |
 | `autostart` | `true` | start with Windows |
 
 Command line: `NAVTOK.exe --setup` (enter the webhook again), `--uninstall`, `--dry-run`
