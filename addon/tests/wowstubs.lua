@@ -92,6 +92,17 @@ function FrameMT:CreateTexture()
 end
 
 function CreateFrame(ftype, name, parent) return W.NewFrame(ftype, name, parent) end
+function FrameMT:GetName() return self.name end
+function FrameMT:GetObjectType() return self.ftype end
+function EnumerateFrames(after)
+  local idx = 0
+  if after then
+    for i, f in ipairs(W.frames) do if f == after then idx = i break end end
+  end
+  for i = idx + 1, #W.frames do
+    if W.frames[i].ftype ~= "Texture" then return W.frames[i] end
+  end
+end
 
 -------------------------------------------------------------------------------
 -- Clock, timers, events

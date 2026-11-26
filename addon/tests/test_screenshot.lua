@@ -90,3 +90,26 @@ H.test("screenshot: Screenshot() error does not break the queue", function()
   H.eq(ns.Screenshot.QueueLength(), 0)
   H.eq(ChatFrame1:GetAlpha(), 1)
 end)
+
+H.test("screenshot: chat addon windows are hidden too (ScrollingMessageFrame, *chat* names, hideFrames)", function()
+  local ns = boot()
+  local smf = CreateFrame("ScrollingMessageFrame", nil, UIParent)       -- unnamed message frame
+  local addon = CreateFrame("Frame", "ChattynatorMessageFrame1", UIParent) -- name contains "chat"
+  local custom = CreateFrame("Frame", "MyWhisperBox", UIParent)          -- configured by name
+  local other = CreateFrame("Frame", "PlayerFrameThing", UIParent)
+  ns.settings.hideFrames = { "MyWhisperBox" }
+  local seen = {}
+  local orig = Screenshot
+  Screenshot = function()
+    seen = { smf = smf:GetAlpha(), addon = addon:GetAlpha(), custom = custom:GetAlpha(), other = other:GetAlpha() }
+    orig()
+  end
+  ns.Emit("loot", { itemId = 1 })
+  W.Frame(); W.Frame(); W.Frame()
+  Screenshot = orig
+  H.eq(seen.smf, 0, "message frame hidden")
+  H.eq(seen.addon, 0, "chat addon frame hidden")
+  H.eq(seen.custom, 0, "hideFrames entry hidden")
+  H.eq(seen.other, 1, "unrelated frame untouched")
+  H.eq(addon:GetAlpha(), 1, "restored afterwards")
+end)

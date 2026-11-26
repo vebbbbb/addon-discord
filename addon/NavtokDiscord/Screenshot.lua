@@ -25,8 +25,36 @@ local CHAT_EXTRA = {
   "ChatFrameToggleVoiceDeafenButton", "ChatFrameToggleVoiceMuteButton", "QuickJoinToastButton",
 }
 
+-- Chat addons (Chattynator, ElvUI, Glass, ...) draw their own windows. Besides the standard
+-- ChatFrameN frames we hide every ScrollingMessageFrame and every frame whose name contains
+-- "chat", plus names listed in settings.hideFrames. The frame scan is cached for a minute.
+local scanned, scannedAt = {}, -1000
+
+local function scanChatLike()
+  if not EnumerateFrames then return {} end
+  if GetTime() - scannedAt < 60 then return scanned end
+  scanned, scannedAt = {}, GetTime()
+  local f = EnumerateFrames()
+  local guard = 0
+  while f and guard < 50000 do
+    guard = guard + 1
+    local ok, otype = pcall(f.GetObjectType, f)
+    local name = f.GetName and f:GetName()
+    local chatName = type(name) == "string" and name:lower():find("chat", 1, true)
+    if (ok and otype == "ScrollingMessageFrame") or chatName then
+      if name ~= "NavtokDiscordBarcode" then scanned[#scanned + 1] = f end
+    end
+    f = EnumerateFrames(f)
+  end
+  return scanned
+end
+
 local function chatFrames()
   local list = {}
+  for _, f in ipairs(scanChatLike()) do list[#list + 1] = f end
+  for _, name in ipairs((ns.settings or ns.DEFAULTS).hideFrames or {}) do
+    if _G[name] then list[#list + 1] = _G[name] end
+  end
   local n = NUM_CHAT_WINDOWS or 10
   for i = 1, n do
     for _, suffix in ipairs({ "", "Tab", "EditBox", "ButtonFrame" }) do

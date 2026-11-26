@@ -14,6 +14,7 @@ ns.unknownEvents = {}
 local DEFAULTS = {
   position = "TOPRIGHT",   -- TOPLEFT | TOPRIGHT | BOTTOMLEFT | BOTTOMRIGHT
   hideChat = true,         -- hide chat frames for the screenshot frame
+  hideFrames = {},         -- extra frame names to hide for screenshots (e.g. a chat addon's window)
   debug = false,
   blockSize = 8,           -- barcode module size in PHYSICAL pixels
   mode = "screenshot",     -- "screenshot" (plan A) | "band" (plan B: no Screenshot(), barcode held visible)
