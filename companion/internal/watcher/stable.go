@@ -13,10 +13,11 @@ import (
 	"time"
 )
 
-// IsScreenshot reports whether name looks like a WoW screenshot we can read.
+// IsScreenshot reports whether name is an image we can read. Any name is accepted: clients do
+// not all use the classic "WoWScrnShot_MMDDYY_HHMMSS.jpg" pattern.
 func IsScreenshot(name string) bool {
 	base := strings.ToLower(filepath.Base(name))
-	if !strings.HasPrefix(base, "wowscrnshot_") {
+	if strings.HasPrefix(base, ".") || strings.HasSuffix(base, ".tmp") {
 		return false
 	}
 	switch filepath.Ext(base) {
@@ -28,8 +29,7 @@ func IsScreenshot(name string) bool {
 
 // IsTGA: WoW is set to TGA screenshots, which we cannot decode (VERIFY.md item 2).
 func IsTGA(name string) bool {
-	base := strings.ToLower(filepath.Base(name))
-	return strings.HasPrefix(base, "wowscrnshot_") && filepath.Ext(base) == ".tga"
+	return strings.ToLower(filepath.Ext(name)) == ".tga"
 }
 
 // complete checks the end-of-image marker so a half-written file is never decoded.
@@ -43,16 +43,19 @@ func complete(path string) bool {
 	if err != nil || st.Size() < 16 {
 		return false
 	}
-	tail := make([]byte, 12)
-	if _, err := f.ReadAt(tail, st.Size()-12); err != nil && !errors.Is(err, io.EOF) {
+	n := int64(64)
+	if st.Size() < n {
+		n = st.Size()
+	}
+	tail := make([]byte, n)
+	if _, err := f.ReadAt(tail, st.Size()-n); err != nil && !errors.Is(err, io.EOF) {
 		return false
 	}
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".png":
 		return bytes.Contains(tail, []byte("IEND"))
-	default: // jpeg: FF D9, possibly followed by padding zeros
-		t := bytes.TrimRight(tail, "\x00")
-		return len(t) >= 2 && t[len(t)-2] == 0xFF && t[len(t)-1] == 0xD9
+	default: // jpeg: FF D9 near the end (some writers pad or append a few bytes)
+		return bytes.Contains(tail, []byte{0xFF, 0xD9})
 	}
 }
 
@@ -69,6 +72,8 @@ func WaitStable(ctx context.Context, path string, step, settle, timeout time.Dur
 				last, since = st.Size(), time.Now()
 			} else if st.Size() > 0 && time.Since(since) >= settle && complete(path) {
 				return nil
+			} else if st.Size() > 0 && time.Since(since) >= time.Second {
+				return nil // size unchanged for a second: done, even without the end marker
 			}
 		}
 		if time.Now().After(deadline) {

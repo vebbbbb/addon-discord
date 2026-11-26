@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +26,9 @@ type Config struct {
 	// OnSavedVars gets SavedVariables files after they stopped changing for Debounce.
 	OnSavedVars func(path string)
 	OnError     func(error)
-	Debounce    time.Duration
+	// OnLog gets diagnostic lines (every file seen in a Screenshots folder).
+	OnLog    func(string)
+	Debounce time.Duration
 }
 
 // Watcher multiplexes one fsnotify watcher over all folders.
@@ -34,9 +37,13 @@ type Watcher struct {
 	fs  *fsnotify.Watcher
 
 	mu       sync.Mutex
-	inflight map[string]bool
+	seen     map[string]bool // screenshot paths already handled (or present at start)
 	svTimers map[string]*time.Timer
 }
+
+// RescanEvery is the safety-net interval: the Screenshots folders are also listed this often,
+// in case a file notification was missed.
+var RescanEvery = 3 * time.Second
 
 // New creates the folders' watches. Missing Screenshots folders are created (WoW creates them
 // lazily on the first screenshot, but we need a folder to watch).
@@ -48,12 +55,16 @@ func New(cfg Config) (*Watcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	w := &Watcher{cfg: cfg, fs: fw, inflight: map[string]bool{}, svTimers: map[string]*time.Timer{}}
+	w := &Watcher{cfg: cfg, fs: fw, seen: map[string]bool{}, svTimers: map[string]*time.Timer{}}
 	for _, d := range cfg.ScreenshotDirs {
 		_ = os.MkdirAll(d, 0o755)
 		if err := fw.Add(d); err != nil {
 			fw.Close()
 			return nil, err
+		}
+		entries, _ := os.ReadDir(d) // existing screenshots are not new
+		for _, e := range entries {
+			w.seen[strings.ToLower(filepath.Join(d, e.Name()))] = true
 		}
 	}
 	for _, d := range cfg.AccountDirs {
@@ -121,10 +132,14 @@ func (w *Watcher) isScreenshotDir(dir string) bool {
 // Run handles events until ctx is cancelled.
 func (w *Watcher) Run(ctx context.Context) {
 	defer w.fs.Close()
+	rescan := time.NewTicker(RescanEvery)
+	defer rescan.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-rescan.C:
+			w.rescan(ctx)
 		case err, ok := <-w.fs.Errors:
 			if !ok {
 				return
@@ -158,29 +173,52 @@ func (w *Watcher) handle(ctx context.Context, ev fsnotify.Event) {
 		w.screenshot(ctx, ev.Name)
 	case w.isScreenshotDir(dir) && IsTGA(name) && w.cfg.OnTGA != nil:
 		w.cfg.OnTGA(ev.Name)
+	case w.isScreenshotDir(dir) && w.cfg.OnLog != nil && ev.Has(fsnotify.Create):
+		w.cfg.OnLog("ignoring " + name + " in the Screenshots folder (not a .jpg/.png)")
+	}
+}
+
+// rescan lists the Screenshots folders and handles image files that no notification announced.
+func (w *Watcher) rescan(ctx context.Context) {
+	for _, d := range w.cfg.ScreenshotDirs {
+		entries, err := os.ReadDir(d)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			if e.IsDir() || !IsScreenshot(e.Name()) {
+				continue
+			}
+			p := filepath.Join(d, e.Name())
+			w.mu.Lock()
+			known := w.seen[strings.ToLower(p)]
+			w.mu.Unlock()
+			if !known {
+				if w.cfg.OnLog != nil {
+					w.cfg.OnLog("found " + e.Name() + " by folder check (no change notification)")
+				}
+				w.screenshot(ctx, p)
+			}
+		}
 	}
 }
 
 func (w *Watcher) screenshot(ctx context.Context, path string) {
+	key := strings.ToLower(path)
 	w.mu.Lock()
-	if w.inflight[path] {
+	if w.seen[key] {
 		w.mu.Unlock()
 		return
 	}
-	w.inflight[path] = true
+	w.seen[key] = true
 	w.mu.Unlock()
+	if w.cfg.OnLog != nil {
+		w.cfg.OnLog("new screenshot " + filepath.Base(path))
+	}
 	go func() {
-		defer func() {
-			// keep the path marked a little longer: WoW sends several Write events per file
-			time.AfterFunc(10*time.Second, func() {
-				w.mu.Lock()
-				delete(w.inflight, path)
-				w.mu.Unlock()
-			})
-		}()
 		if err := WaitStable(ctx, path, 25*time.Millisecond, 75*time.Millisecond, 15*time.Second); err != nil {
 			if w.cfg.OnError != nil && ctx.Err() == nil {
-				w.cfg.OnError(err)
+				w.cfg.OnError(errors.New(filepath.Base(path) + ": " + err.Error()))
 			}
 			return
 		}

@@ -99,6 +99,7 @@ func (a *App) Run(ctx context.Context) error {
 			a.Problems.Report(ProblemTGA, "WoW saves screenshots as TGA. NAVTOK needs JPG: type /console screenshotFormat jpg in WoW.")
 		},
 		OnError: func(err error) { logx.Printf("watch: %v", err) },
+		OnLog:   func(s string) { logx.Printf("%s", s) },
 	})
 	if err != nil {
 		a.Problems.Report(ProblemWatch, "NAVTOK cannot watch the WoW folders: "+err.Error())

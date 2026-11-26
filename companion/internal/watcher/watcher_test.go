@@ -13,7 +13,7 @@ var jpegish = append(append([]byte{0xFF, 0xD8}, make([]byte, 4000)...), 0xFF, 0x
 
 func TestIsScreenshot(t *testing.T) {
 	for n, want := range map[string]bool{"WoWScrnShot_112626_143005.jpg": true, "wowscrnshot_1.PNG": true,
-		"WoWScrnShot_1.tga": false, "other.jpg": false} {
+		"WoWScrnShot_1.tga": false, "Forever_2026-11-26_17-52-37.jpg": true, "notes.txt": false, "x.jpg.tmp": false} {
 		if IsScreenshot(n) != want {
 			t.Errorf("%s", n)
 		}
@@ -42,11 +42,18 @@ func TestWaitStableWaitsForCompleteFile(t *testing.T) {
 	}
 }
 
-func TestWaitStableTimeoutOnTruncatedJPEG(t *testing.T) {
+func TestWaitStableNoEndMarkerAcceptedAfterOneSecond(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "WoWScrnShot_2.jpg")
 	os.WriteFile(p, jpegish[:500], 0o644)
-	if err := WaitStable(context.Background(), p, 10*time.Millisecond, 20*time.Millisecond, 200*time.Millisecond); err == nil {
-		t.Fatal("truncated jpeg accepted")
+	if err := WaitStable(context.Background(), p, 10*time.Millisecond, 20*time.Millisecond, 500*time.Millisecond); err == nil {
+		t.Fatal("accepted before the size was stable for a second")
+	}
+	start := time.Now()
+	if err := WaitStable(context.Background(), p, 10*time.Millisecond, 20*time.Millisecond, 3*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	if time.Since(start) < 900*time.Millisecond {
+		t.Fatal("too early")
 	}
 }
 
@@ -98,5 +105,43 @@ func TestWatcherScreenshotsAndSavedVars(t *testing.T) {
 	}
 	if files := SavedVarsFiles([]string{acct}); len(files) != 2 {
 		t.Fatalf("SavedVarsFiles %v", files)
+	}
+}
+
+func TestRescanCatchesMissedNotifications(t *testing.T) {
+	root := t.TempDir()
+	shots := filepath.Join(root, "Screenshots")
+	os.MkdirAll(shots, 0o755)
+	os.WriteFile(filepath.Join(shots, "old.jpg"), jpegish, 0o644) // present at start: ignored
+	var mu sync.Mutex
+	var got []string
+	w, err := New(Config{ScreenshotDirs: []string{shots},
+		OnScreenshot: func(p string) { mu.Lock(); got = append(got, filepath.Base(p)); mu.Unlock() }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := RescanEvery
+	RescanEvery = 100 * time.Millisecond
+	defer func() { RescanEvery = old }()
+	w.fs.Remove(shots) // simulate: notifications never arrive
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go w.Run(ctx)
+	os.WriteFile(filepath.Join(shots, "WoWScrnShot_112626_175504.jpg"), jpegish, 0o644)
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		mu.Lock()
+		n := len(got)
+		mu.Unlock()
+		if n > 0 {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	time.Sleep(300 * time.Millisecond)
+	mu.Lock()
+	defer mu.Unlock()
+	if len(got) != 1 || got[0] != "WoWScrnShot_112626_175504.jpg" {
+		t.Fatalf("got %v", got)
 	}
 }
