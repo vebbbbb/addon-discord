@@ -28,3 +28,23 @@ H.test("probe: stays enabled across reload", function()
   local ns2 = H.Boot({ db = NavtokDiscordDB })
   H.ok(ns2.Probe.enabled)
 end)
+
+H.test("probe: shot test switches itself off; mouseover/nameplate spam only for rares", function()
+  local ns = H.Boot()
+  SlashCmdList["NAVTOK"]("probe shot")
+  W.Advance(1.1)
+  H.eq(#W.screenshots, 1)
+  W.Advance(4)
+  H.ok(not ns.Probe.enabled, "probe off again after the shot test")
+  SlashCmdList["NAVTOK"]("probe on")
+  local n = #NavtokDiscordDB.probe
+  W.units.mouseover = { name = "Defias Thug", classification = "normal" }
+  W.Fire("UPDATE_MOUSEOVER_UNIT")
+  W.units.nameplate1 = { name = "Kobold", classification = "normal" }
+  W.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+  W.Fire("UNIT_HEALTH", "nameplate1")
+  H.eq(#NavtokDiscordDB.probe, n, "normal mobs are not logged")
+  W.units.nameplate2 = { name = "Mor'Ladim", classification = "rareelite" }
+  W.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+  H.contains(NavtokDiscordDB.probe[#NavtokDiscordDB.probe], "NAME_PLATE_UNIT_ADDED(nameplate2)")
+end)

@@ -19,7 +19,9 @@ output, and what to change if the answer is "no".
 
 ## 1. `Screenshot()` works without a key press (decides plan A vs plan B)
 
-- [ ] **Result:** ______
+- [x] **Result:** works. Checked 2026-11-26 in WoW Forever with `/navtok probe shot`: `SCREENSHOT_STARTED()`,
+  `returned ok=true`, `SCREENSHOT_SUCCEEDED()` about 150 ms later. **Plan A** is used; plan B stays off.
+  `NAME_PLATE_UNIT_ADDED/REMOVED` and `UPDATE_MOUSEOVER_UNIT` also exist (helps rare kills, item 7b).
 
 Steps:
 1. Install NAVTOK and log in.

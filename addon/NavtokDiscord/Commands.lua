@@ -77,7 +77,6 @@ function C.Handle(msg)
     ns.Print("debug: " .. onoff(s.debug))
   elseif cmd == "probe" then
     if rest == "shot" then
-      if not ns.Probe.enabled then ns.Probe.SetEnabled(true) end
       ns.Probe.ShotTest()
     elseif rest == "clear" then
       ns.db.probe = {}

@@ -102,7 +102,26 @@ local AFTER = {
 
 local throttled = { UPDATE_FACTION = 0, UPDATE_BATTLEFIELD_SCORE = 0, UPDATE_BATTLEFIELD_STATUS = 0 }
 
+-- High-frequency unit events: only logged when the unit is a rare (rare kill checks), so the
+-- probe does not flood chat with every mouseover / nameplate / health tick.
+local UNIT_EVENTS = {
+  UPDATE_MOUSEOVER_UNIT = "mouseover", PLAYER_TARGET_CHANGED = "target",
+  NAME_PLATE_UNIT_ADDED = true, NAME_PLATE_UNIT_REMOVED = true,
+  UNIT_HEALTH = true, UNIT_HEALTH_FREQUENT = true, UNIT_FLAGS = true,
+}
+
+local function interestingUnit(event, ...)
+  local unit = UNIT_EVENTS[event]
+  if unit == true then unit = ... end
+  if type(unit) ~= "string" or not UnitClassification or not UnitExists or not UnitExists(unit) then
+    return false
+  end
+  local c = UnitClassification(unit)
+  return c == "rare" or c == "rareelite" or c == "worldboss"
+end
+
 function P.OnEvent(event, ...)
+  if UNIT_EVENTS[event] and not interestingUnit(event, ...) then return end
   P.Log(event .. "(" .. fmtArgs(...) .. ")")
   local after = AFTER[event]
   if after then
@@ -159,11 +178,20 @@ function P.SetEnabled(on, quiet)
 end
 
 -- `/navtok probe shot`: tests VERIFY item 1/3 - Screenshot() from a timer, no key press.
+-- The probe is switched on for the test only (unless it was on already) and off again after 4 s.
 function P.ShotTest()
+  local wasOn = P.enabled
+  if not wasOn then P.SetEnabled(true, true) end
   P.Log("shot test: calling Screenshot() from a timer in 1s (no hardware event)")
   ns.After(1, function()
     P.Log("shot test: Screenshot() now, time()=" .. time())
     local ok, err = pcall(Screenshot)
     P.Log("shot test: returned ok=" .. tostring(ok) .. (err and (" err=" .. tostring(err)) or ""))
+  end)
+  ns.After(4, function()
+    if not wasOn and P.enabled then
+      P.SetEnabled(false, true)
+      ns.Print("shot test done (probe off again)")
+    end
   end)
 end
