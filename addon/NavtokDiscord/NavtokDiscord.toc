@@ -1,0 +1,24 @@
+## Interface: 16001
+## Title: NAVTOK DISCORD
+## Notes: Posts your milestones (epic loot, levels, reputation, dungeons, battlegrounds...) to your guild Discord, live, with a screenshot. Needs the NAVTOK companion program.
+## Author: NAVTOK
+## Version: 1.0.0
+## SavedVariables: NavtokDiscordDB
+## X-Website: https://github.com/navtok/navtok-discord
+
+Json.lua
+Data\Classes.lua
+Data\Dungeons.lua
+Core.lua
+Barcode.lua
+Screenshot.lua
+Probe.lua
+Notifiers\Loot.lua
+Notifiers\Skill.lua
+Notifiers\Level.lua
+Notifiers\Reputation.lua
+Notifiers\Death.lua
+Notifiers\Dungeon.lua
+Notifiers\Battleground.lua
+Notifiers\Legacy.lua
+Commands.lua
