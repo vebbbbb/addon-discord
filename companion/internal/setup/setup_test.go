@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/navtok/navtok-discord/companion/internal/config"
-	"github.com/navtok/navtok-discord/companion/internal/discord"
+	"github.com/vebbbbb/addon-discord/companion/internal/config"
+	"github.com/vebbbbb/addon-discord/companion/internal/discord"
 )
 
 type fakeUI struct {

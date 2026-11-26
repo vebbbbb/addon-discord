@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/navtok/navtok-discord/companion/internal/config"
-	"github.com/navtok/navtok-discord/companion/internal/discord"
-	"github.com/navtok/navtok-discord/companion/internal/logx"
-	"github.com/navtok/navtok-discord/companion/internal/wowdetect"
+	"github.com/vebbbbb/addon-discord/companion/internal/config"
+	"github.com/vebbbbb/addon-discord/companion/internal/discord"
+	"github.com/vebbbbb/addon-discord/companion/internal/logx"
+	"github.com/vebbbbb/addon-discord/companion/internal/wowdetect"
 )
 
 // UI is the dialog surface (zenity on Windows, console elsewhere, fake in tests).

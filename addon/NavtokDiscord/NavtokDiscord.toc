@@ -4,7 +4,7 @@
 ## Author: NAVTOK
 ## Version: 1.0.0
 ## SavedVariables: NavtokDiscordDB
-## X-Website: https://github.com/navtok/navtok-discord
+## X-Website: https://github.com/vebbbbb/addon-discord
 
 Json.lua
 Data\Classes.lua

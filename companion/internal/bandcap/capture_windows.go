@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"github.com/navtok/navtok-discord/companion/internal/barcode"
+	"github.com/vebbbbb/addon-discord/companion/internal/barcode"
 )
 
 var (

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/navtok/navtok-discord/companion/internal/barcode"
-	"github.com/navtok/navtok-discord/companion/internal/event"
+	"github.com/vebbbbb/addon-discord/companion/internal/barcode"
+	"github.com/vebbbbb/addon-discord/companion/internal/event"
 )
 
 func TestDecodeFlag(t *testing.T) {

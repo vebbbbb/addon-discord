@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/navtok/navtok-discord/companion/internal/event"
+	"github.com/vebbbbb/addon-discord/companion/internal/event"
 )
 
 func ev(char, id string) *event.Event { return &event.Event{Char: char, ID: id} }

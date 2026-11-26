@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 VERSION="${1:-dev}"
 OUT="${NAVTOK_OUT:-dist}"
 mkdir -p "$OUT"
-PKG=github.com/navtok/navtok-discord/companion/internal/config
+PKG=github.com/vebbbbb/addon-discord/companion/internal/config
 LDFLAGS="-H windowsgui -s -w -X main.version=${VERSION}"
 if [[ -n "${NAVTOK_DEFAULT_WEBHOOK:-}" ]]; then
   LDFLAGS="$LDFLAGS -X ${PKG}.DefaultWebhook=${NAVTOK_DEFAULT_WEBHOOK}"

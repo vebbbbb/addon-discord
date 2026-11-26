@@ -1,4 +1,4 @@
-module github.com/navtok/navtok-discord
+module github.com/vebbbbb/addon-discord
 
 go 1.26.0
 

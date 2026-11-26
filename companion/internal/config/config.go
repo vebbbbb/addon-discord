@@ -11,11 +11,11 @@ import (
 
 // DefaultWebhook can be baked into a private guild build:
 //
-//	go build -ldflags "-X github.com/navtok/navtok-discord/companion/internal/config.DefaultWebhook=https://discord.com/api/webhooks/..."
+//	go build -ldflags "-X github.com/vebbbbb/addon-discord/companion/internal/config.DefaultWebhook=https://discord.com/api/webhooks/..."
 var DefaultWebhook = ""
 
 // UpdateRepo is the GitHub "owner/repo" used by the optional self-update (ldflags too).
-var UpdateRepo = "navtok/navtok-discord"
+var UpdateRepo = "vebbbbb/addon-discord"
 
 // Config is config.json.
 type Config struct {

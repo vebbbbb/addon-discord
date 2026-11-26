@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/navtok/navtok-discord/companion/internal/event"
+	"github.com/vebbbbb/addon-discord/companion/internal/event"
 )
 
 // Message is the webhook JSON body (payload_json).

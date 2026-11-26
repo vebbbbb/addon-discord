@@ -8,7 +8,7 @@ import (
 	"image/jpeg"
 	"testing"
 
-	"github.com/navtok/navtok-discord/companion/internal/barcode"
+	"github.com/vebbbbb/addon-discord/companion/internal/barcode"
 )
 
 func scene(w, h int) *image.RGBA {

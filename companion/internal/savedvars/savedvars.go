@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/navtok/navtok-discord/companion/internal/event"
+	"github.com/vebbbbb/addon-discord/companion/internal/event"
 )
 
 // Table is a Lua table: positional values in List, everything else in Map (keys as strings).

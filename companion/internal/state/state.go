@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/navtok/navtok-discord/companion/internal/config"
-	"github.com/navtok/navtok-discord/companion/internal/event"
+	"github.com/vebbbbb/addon-discord/companion/internal/config"
+	"github.com/vebbbbb/addon-discord/companion/internal/event"
 )
 
 // Retention: posted keys older than this are forgotten (must exceed the late window).

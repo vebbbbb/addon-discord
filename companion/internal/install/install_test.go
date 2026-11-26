@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	navtok "github.com/navtok/navtok-discord"
+	navtok "github.com/vebbbbb/addon-discord"
 )
 
 func TestInstallEmbeddedAddon(t *testing.T) {

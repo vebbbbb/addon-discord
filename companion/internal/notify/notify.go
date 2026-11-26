@@ -4,7 +4,7 @@ package notify
 import (
 	"sync"
 
-	"github.com/navtok/navtok-discord/companion/internal/logx"
+	"github.com/vebbbbb/addon-discord/companion/internal/logx"
 )
 
 // Problems tracks active problems.

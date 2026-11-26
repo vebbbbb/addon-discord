@@ -53,7 +53,7 @@ type Client struct {
 // NewClient returns a client with sane timeouts.
 func NewClient(url string) *Client {
 	return &Client{URL: strings.TrimSpace(url), HTTP: &http.Client{Timeout: 30 * time.Second},
-		UserAgent: "NAVTOK-Discord (https://github.com/navtok/navtok-discord, 1.0)", now: time.Now, sleep: sleepCtx}
+		UserAgent: "NAVTOK-Discord (https://github.com/vebbbbb/addon-discord, 1.0)", now: time.Now, sleep: sleepCtx}
 }
 
 func sleepCtx(ctx context.Context, d time.Duration) error {

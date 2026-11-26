@@ -15,13 +15,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/navtok/navtok-discord/companion/internal/barcode"
-	"github.com/navtok/navtok-discord/companion/internal/config"
-	"github.com/navtok/navtok-discord/companion/internal/discord"
-	"github.com/navtok/navtok-discord/companion/internal/event"
-	"github.com/navtok/navtok-discord/companion/internal/notify"
-	"github.com/navtok/navtok-discord/companion/internal/state"
-	"github.com/navtok/navtok-discord/companion/internal/wowdetect"
+	"github.com/vebbbbb/addon-discord/companion/internal/barcode"
+	"github.com/vebbbbb/addon-discord/companion/internal/config"
+	"github.com/vebbbbb/addon-discord/companion/internal/discord"
+	"github.com/vebbbbb/addon-discord/companion/internal/event"
+	"github.com/vebbbbb/addon-discord/companion/internal/notify"
+	"github.com/vebbbbb/addon-discord/companion/internal/state"
+	"github.com/vebbbbb/addon-discord/companion/internal/wowdetect"
 )
 
 type recorder struct {
