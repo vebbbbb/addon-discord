@@ -110,6 +110,9 @@ func main() {
 	}
 	if !platform.SingleInstance(wait) {
 		logx.Printf("already running, exiting")
+		if !*restarted && tray.Available() {
+			platform.ShowInfo("NAVTOK is already running.\n\nLook for its icon in the tray (click ^ next to the clock).")
+		}
 		return
 	}
 	update.Cleanup()
