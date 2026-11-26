@@ -5,6 +5,11 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
+  # publishing a release on github.com (Releases > Draft a new release) builds and attaches
+  # NAVTOK.exe + the addon zip to it
+  release:
+    types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
