@@ -220,8 +220,19 @@ function GetItemInfo(link)
   local id = tonumber(tostring(link):match("item:(%d+)")) or tonumber(link)
   local it = W.items[id]
   if not it then return nil end
-  return it.name, link, it.quality
+  return it.name, link, it.quality, 60, 60, "Armor", "Plate", 1, it.equipLoc or "INVTYPE_CHEST"
 end
+function IsEquippableItem(link)
+  local id = tonumber(tostring(link):match("item:(%d+)")) or tonumber(link)
+  local it = W.items[id]
+  if not it then return nil end
+  return (it.equipLoc or "INVTYPE_CHEST") ~= ""
+end
+W.hooks = {}
+function hooksecurefunc(name, fn) W.hooks[name] = fn end
+W.rollItems = {}
+function RollOnLoot(rollID, rollType) if W.hooks.RollOnLoot then W.hooks.RollOnLoot(rollID, rollType) end end
+function GetLootRollItemLink(rollID) return W.rollItems[rollID] end
 
 function GetNumFactions() return #W.factions end
 function GetFactionInfo(i)
@@ -250,6 +261,10 @@ function RequestBattlefieldScoreData() W.bg.requested = (W.bg.requested or 0) + 
 LOOT_ITEM_SELF = "You receive loot: %s."
 LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %sx%d."
 SKILL_RANK_UP = "Your skill in %s has increased to %d."
+LOOT_ROLL_YOU_WON = "You won: %s"
+LOOT_ROLL_NEED_SELF = "You have selected Need for: %s"
+LOOT_ROLL_ROLLED_NEED = "Need Roll - %d for %s by %s"
+YOU = "You"
 COMBATLOG_XPGAIN_FIRSTPERSON = "%s dies, you gain %d experience."
 COMBATLOG_XPGAIN_FIRSTPERSON_GROUP = "%s dies, you gain %d experience. (+%d group bonus)"
 COMBATLOG_XPGAIN_EXHAUSTION1 = "%s dies, you gain %d experience. (%s exp %s bonus)"

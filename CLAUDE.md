@@ -114,7 +114,7 @@ SavedVariables JSON line (sorted keys), produced by `Core.lua` `ns.Emit`:
 
 | type | data fields | trigger | screenshot delay |
 |---|---|---|---|
-| loot | itemId, quality, count, item | CHAT_MSG_LOOT matched with patterns from LOOT_ITEM_SELF(_MULTIPLE); quality ≥ `lootMinQuality` (4); uncached → GET_ITEM_INFO_RECEIVED, 5 s timeout → link colour | 0 |
+| loot | itemId, quality, count, item, roll, rollValue | CHAT_MSG_LOOT matched with patterns from LOOT_ITEM_SELF(_MULTIPLE); quality ≥ `lootMinQuality` (4); uncached → GET_ITEM_INFO_RECEIVED, 5 s timeout → link colour. **Need wins:** RollOnLoot(id, 1) hooked + LOOT_ROLL_NEED_SELF mark the item; LOOT_ROLL_YOU_WON posts it with roll=need (any quality ≥ `needMinQuality`, default 0), roll value from LOOT_ROLL_ROLLED_NEED; the following "You receive loot" is not posted again | 0 |
 | skill | skill, rank | CHAT_MSG_SKILL ~ SKILL_RANK_UP at 75/150/225/300 | 0 |
 | level | zone (+ top-level `level`) | PLAYER_LEVEL_UP | 0.5 s, priority |
 | reputation | faction, standing (5..8) | UPDATE_FACTION, standingID cached per faction in `char.rep`, posted on increase | 0 |

@@ -19,7 +19,7 @@ func TestPayloadRoundTrip(t *testing.T) {
 
 func TestParsePayloadFromLuaFixture(t *testing.T) {
 	// payload of addon/tests/fixtures/barcode_v1.txt
-	p := []byte("L\x1f\x1f1764160000\x1f42\x1fNavt\xc3\xb6k\x1f8\x1f60\x1f19019\x1f5\x1f1\x1fThunderfury, Blessed Blade of the Windseeker")
+	p := []byte("L\x1f\x1f1764160000\x1f42\x1fNavt\xc3\xb6k\x1f8\x1f60\x1f19019\x1f5\x1f1\x1fThunderfury, Blessed Blade of the Windseeker\x1f\x1f")
 	e, err := ParsePayload(p)
 	if err != nil {
 		t.Fatal(err)

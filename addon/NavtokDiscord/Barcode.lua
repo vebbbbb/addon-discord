@@ -20,7 +20,7 @@ B.TYPE_CODES = {
 
 -- Type specific payload fields, in order. Shared with the companion (internal/event/payload.go).
 B.FIELDS = {
-  loot       = { "itemId", "quality", "count", "item" },
+  loot       = { "itemId", "quality", "count", "item", "roll", "rollValue" },
   skill      = { "skill", "rank" },
   level      = { "zone" },
   reputation = { "faction", "standing" },

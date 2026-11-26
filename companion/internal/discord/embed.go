@@ -146,6 +146,14 @@ func Build(e *event.Event, o Options) Message {
 			item = "item " + e.Get("itemId")
 		}
 		em.Title = "Looted [" + item + "]"
+		if e.Get("roll") == "need" {
+			em.Title = "Won [" + item + "]"
+			if v := e.Int("rollValue"); v > 0 {
+				em.Title += fmt.Sprintf(" (Need %d)", v)
+			} else {
+				em.Title += " (Need)"
+			}
+		}
 		if c := e.Int("count"); c > 1 {
 			em.Title += fmt.Sprintf(" x%d", c)
 		}

@@ -146,6 +146,16 @@ Forever's client database defines the legacy challenges as achievements (176 of 
    nameplate when it dies is caught. Check whether `NAME_PLATE_UNIT_*` events exist
    (`unknown events` line) - if they do, enemy nameplates on (V key) make detection reliable.
 
+## 7c. Need roll wins
+
+- [ ] **Result:** ______
+
+1. In a group, roll **Need** on an item and win it. Expect one post "Won [Item] (Need 87)".
+2. Check chat for the exact messages: "You have selected Need for: X", "Need Roll - 87 for X by
+   <you>", "You won: X". If Forever words them differently (or adds the roll to "You won"),
+   note the text; the patterns come from LOOT_ROLL_* GlobalStrings, so they should follow.
+3. Win an item on **Greed**: no need post (an epic still posts as normal loot).
+
 ## 8. Physical pixel size / UI scale for pixel-perfect drawing
 
 - [ ] **Result:** ______

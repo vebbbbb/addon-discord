@@ -295,6 +295,18 @@ func (r rewrite) RoundTrip(req *http.Request) (*http.Response, error) {
 	return http.DefaultTransport.RoundTrip(nr)
 }
 
+func TestNeedWinEmbed(t *testing.T) {
+	e := ev("loot", map[string]string{"itemId": "2000", "quality": "2", "count": "1", "item": "Green Boots", "roll": "need", "rollValue": "87"})
+	em := Build(e, Options{WowheadBase: "https://www.wowhead.com/forever"}).Embeds[0]
+	if em.Title != "Won [Green Boots] (Need 87)" || em.Color != 0x1EFF00 || em.URL != "https://www.wowhead.com/forever/item=2000" {
+		t.Fatalf("%+v", em)
+	}
+	e.Data["rollValue"] = ""
+	if Build(e, Options{}).Embeds[0].Title != "Won [Green Boots] (Need)" {
+		t.Fatal("no roll value")
+	}
+}
+
 func TestDungeonSummaryEmbed(t *testing.T) {
 	e := ev("dungeon", map[string]string{"encounter": "Withermaw", "instance": "Blackmaw Hold", "bosses": "5", "duration": "2040", "shotSeq": "7"})
 	em := Build(e, Options{}).Embeds[0]

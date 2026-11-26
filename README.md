@@ -40,6 +40,7 @@ Settings, state and log live in `~/.config/NAVTOK/`.
 | Event | When |
 |---|---|
 | Loot | you loot an epic (or better) item |
+| Need roll | you **win anything on a Need roll**: "Won [Item] (Need 87)" |
 | Skill | a profession or weapon skill reaches 75 / 150 / 225 / 300 |
 | Level | you level up (screenshot catches the level-up glow) |
 | Reputation | you reach Friendly, Honored, Revered or Exalted with a faction |

@@ -22,6 +22,7 @@ local DEFAULTS = {
   holdFrames = 1,          -- frames to keep the barcode after Screenshot() before hiding it
   minInterval = 2,         -- seconds between two screenshot events (rate limit)
   lootMinQuality = 4,      -- 4 = epic
+  needMinQuality = 0,      -- items won on a Need roll: 0 = everything (2 = green or better)
   skillMilestones = { 75, 150, 225, 300 },
   legacyZones = true,      -- also post single-zone "Explore <zone>" legacy steps
   legacyPatterns = { "[Ll]egacy.-[Cc]omplete", "[Cc]omplete.-[Ll]egacy" }, -- fallback only

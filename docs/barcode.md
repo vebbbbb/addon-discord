@@ -82,7 +82,7 @@ posted.
 
 | code | type | fields 7… (in order) | shortened first when > 96 bytes |
 |---|---|---|---|
-| `L` | loot | itemId, quality, count, item | item |
+| `L` | loot | itemId, quality, count, item, roll (`need` or empty), rollValue | item |
 | `S` | skill | skill, rank | skill |
 | `V` | level | zone | zone |
 | `R` | reputation | faction, standing (1..8) | faction |

@@ -63,7 +63,7 @@ var typeCodes = map[string]string{
 }
 
 var fields = map[string][]string{
-	"loot":       {"itemId", "quality", "count", "item"},
+	"loot":       {"itemId", "quality", "count", "item", "roll", "rollValue"},
 	"skill":      {"skill", "rank"},
 	"level":      {"zone"},
 	"reputation": {"faction", "standing"},
