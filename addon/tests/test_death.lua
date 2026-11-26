@@ -16,6 +16,7 @@ H.test("death: last hostile target remembered; no killer when unknown", function
   W.target = nil
   W.Fire("PLAYER_DEAD")
   H.contains(H.EventsOfType(ns, "death")[1].raw, '"killer":"Defias Thug"')
+  W.Advance(30) -- a second death later on
   W.Fire("PLAYER_DEAD")
   local raw = H.EventsOfType(ns, "death")[2].raw
   H.ok(not raw:find('"killer"'), "no killer field")
@@ -27,4 +28,15 @@ H.test("death: ignored right after login", function()
   ns.loginTime = GetTime()
   W.Fire("PLAYER_DEAD")
   H.eq(#H.EventsOfType(ns, "death"), 0)
+end)
+
+H.test("death: PLAYER_DEAD fired twice for one death posts once; a later death posts again", function()
+  local ns = H.Boot()
+  W.Fire("PLAYER_DEAD")
+  W.Advance(0.2)
+  W.Fire("PLAYER_DEAD")
+  H.eq(#H.EventsOfType(ns, "death"), 1)
+  W.Advance(60)
+  W.Fire("PLAYER_DEAD")
+  H.eq(#H.EventsOfType(ns, "death"), 2)
 end)

@@ -5,6 +5,7 @@ local _, ns = ...
 local N = ns.NewNotifier("death")
 
 N.LOGIN_GRACE = 3
+N.REPEAT_GRACE = 10 -- Forever fires PLAYER_DEAD twice for one death (seen in the wild)
 
 local function hostileName(unit)
   if UnitExists and UnitExists(unit) and UnitCanAttack and UnitCanAttack("player", unit) then
@@ -24,6 +25,8 @@ end
 
 function N:Handle()
   if ns.loginTime and GetTime() - ns.loginTime < self.LOGIN_GRACE then return end
+  if self.lastDeath and GetTime() - self.lastDeath < self.REPEAT_GRACE then return end
+  self.lastDeath = GetTime()
   ns.Emit("death", {
     zone = GetRealZoneText and GetRealZoneText() or "",
     subzone = GetSubZoneText and GetSubZoneText() or "",
