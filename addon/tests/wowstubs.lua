@@ -271,7 +271,7 @@ function GetCursorInfo() if W.cursor then return "item", tonumber(W.cursor:match
 function GetItemInfoInstant(link)
   local id = tonumber(tostring(link):match("item:(%d+)")) or tonumber(link)
   local it = W.items[id]
-  return id, nil, nil, nil, nil, it and it.classID or 4
+  return id, nil, nil, it and it.equipLoc or "INVTYPE_CHEST", nil, it and it.classID or 4, it and it.subclassID or 1
 end
 W.rollItems = {}
 function RollOnLoot(rollID, rollType) if W.hooks.RollOnLoot then W.hooks.RollOnLoot(rollID, rollType) end end

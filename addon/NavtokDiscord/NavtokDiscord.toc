@@ -12,6 +12,7 @@ Data\Dungeons.lua
 Data\Legacy.lua
 Data\Attunements.lua
 Data\QuestRewards.lua
+Data\ClassGear.lua
 Core.lua
 Barcode.lua
 Screenshot.lua

@@ -28,7 +28,8 @@ local DEFAULTS = {
   levelEvery = 1,          -- post every N levels (the max level is always posted)
   maxLevel = 60,
   equipMinQuality = 3,     -- BoE items equipped: 3 = blue (rare) or better
-  recipeMinQuality = 2,    -- recipes learned from an item: 2 = green or better
+  recipeMinQuality = 3,    -- recipes learned from an item: 3 = blue or better ...
+  recipeMinQualityBy = { [6] = 2, [8] = 2 }, -- ... except Alchemy (6) and Enchanting (8): green
   lootMinQuality = 4,      -- 4 = epic
   needMinQuality = 0,      -- items won on a Need roll: 0 = everything (2 = green or better)
   skillMilestones = { 75, 150, 225, 300 },

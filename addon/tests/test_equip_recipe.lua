@@ -24,10 +24,29 @@ H.test("equip: BoE equipped after the bind confirmation posts (blue+), other gea
   H.eq(#H.EventsOfType(ns, "equip"), 1, "green below the default minimum")
 end)
 
+H.test("recipe: green Alchemy/Enchanting posts; other professions need blue", function()
+  local ns = H.Boot()
+  local alch = link(4100, "Recipe: Greater Healing Potion", "1eff00")
+  local tail = link(4101, "Pattern: Green Robe", "1eff00")
+  local bluePattern = link(4102, "Pattern: Blue Robe", "0070dd")
+  W.items[4100] = { name = "Recipe: Greater Healing Potion", quality = 2, classID = 9, subclassID = 6 }
+  W.items[4101] = { name = "Pattern: Green Robe", quality = 2, classID = 9, subclassID = 2 }
+  W.items[4102] = { name = "Pattern: Blue Robe", quality = 3, classID = 9, subclassID = 2 }
+  W.bags[0] = { [1] = alch, [2] = tail, [3] = bluePattern }
+  for slot = 1, 3 do
+    UseContainerItem(0, slot)
+    W.Fire("CHAT_MSG_SYSTEM", "You have learned how to create a new item: Thing" .. slot .. ".")
+  end
+  local ev = H.EventsOfType(ns, "recipe")
+  H.eq(#ev, 2)
+  H.contains(ev[1].raw, '"item":"Recipe: Greater Healing Potion"')
+  H.contains(ev[2].raw, '"item":"Pattern: Blue Robe"')
+end)
+
 H.test("recipe: learned from a recipe item posts; trainer recipes do not", function()
   local ns = H.Boot()
   local r = link(4000, "Recipe: Elixir of Giants", "1eff00")
-  W.items[4000] = { name = "Recipe: Elixir of Giants", quality = 2, classID = 9 }
+  W.items[4000] = { name = "Recipe: Elixir of Giants", quality = 2, classID = 9, subclassID = 6 }
   W.bags[0] = { [3] = r, [4] = link(4001, "Linen Cloth", "ffffff") }
   W.items[4001] = { name = "Linen Cloth", quality = 1, classID = 7 }
   -- trainer: no item used

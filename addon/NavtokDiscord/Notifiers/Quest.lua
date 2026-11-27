@@ -2,7 +2,8 @@
 --   1 attunement  quest/item listed in Data/Attunements.lua      "<name> is attuned to <raid>!"
 --   2 tier05      title (or ID) in Data/QuestRewards.lua Tier05  "upgraded <pieces> to Tier 0.5 (n/4)"
 --   3 epic        any reward item of quality >= 4
---   4 dungeon     reward quality >= 3 and the quest tag is Dungeon/Raid (GetQuestTagInfo)
+--   4 dungeon     reward quality >= 3 and the quest tag is Dungeon/Raid (GetQuestTagInfo), and the
+--                 player's class can equip it (Data/ClassGear.lua; too low level still counts)
 --   5 allowlist   reward item in Data/QuestRewards.lua QuestRewardAllowlist
 -- Everything is read on QUEST_COMPLETE (the quest is still in the log); the chosen reward comes from
 -- hooksecurefunc("GetQuestReward"); the post is sent after QUEST_TURNED_IN, confirmed by the
@@ -146,7 +147,11 @@ function N:Classify(snap)
   local epic = best(items, 4)
   if epic then return "epic", with({ item = epic.name, itemId = epic.id, quality = epic.quality }) end
   -- 4 dungeon / raid quest with a blue+ reward
-  local blue = best(items, 3)
+  local usable = {}
+  for _, it in ipairs(items) do
+    if ns.Data.CanClassEquip(ns.classFile, it.link) then usable[#usable + 1] = it end
+  end
+  local blue = best(usable, 3)
   if blue and isDungeonTag(snap.tagID, snap.tagName) then
     return "dungeon", with({ item = blue.name, itemId = blue.id, quality = blue.quality, extra = snap.tagName })
   end

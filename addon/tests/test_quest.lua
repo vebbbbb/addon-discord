@@ -98,3 +98,23 @@ H.test("quest: missing item message -> posted after the timeout; switch off work
   turnIn({ id = 10, title = "Off", rewards = { epic } }, nil, { epic })
   H.eq(#H.EventsOfType(ns, "quest"), 1)
 end)
+
+H.test("quest: dungeon blues the class can never equip are not posted; too-low level still posts", function()
+  local ns = boot() -- the test character is a WARRIOR
+  local wand = link(7101, "Dungeon Wand", "0070dd")
+  local plate = link(7102, "Dungeon Plate", "0070dd")
+  W.items[7101] = { name = "Dungeon Wand", quality = 3, classID = 2, subclassID = 19, equipLoc = "INVTYPE_RANGED" }
+  W.items[7102] = { name = "Dungeon Plate", quality = 3, classID = 4, subclassID = 4, equipLoc = "INVTYPE_CHEST" }
+  turnIn({ id = 20, title = "Wand Quest", rewards = { wand }, tagID = 81, tagName = "Dungeon" }, nil, { wand })
+  H.eq(#H.EventsOfType(ns, "quest"), 0, "warriors can never use wands")
+  -- level 20 warrior: plate needs level 40 to train, but it is the class's armor -> posts
+  turnIn({ id = 21, title = "Plate Quest", rewards = { plate }, tagID = 81, tagName = "Dungeon" }, nil, { plate })
+  local ev = H.EventsOfType(ns, "quest")
+  H.eq(#ev, 1)
+  H.contains(ev[1].raw, '"item":"Dungeon Plate"')
+  -- a ring is always fine
+  local ring = link(7103, "Dungeon Ring", "0070dd")
+  W.items[7103] = { name = "Dungeon Ring", quality = 3, classID = 4, subclassID = 0, equipLoc = "INVTYPE_FINGER" }
+  turnIn({ id = 22, title = "Ring Quest", rewards = { ring }, tagID = 81, tagName = "Dungeon" }, nil, { ring })
+  H.eq(#H.EventsOfType(ns, "quest"), 2)
+end)

@@ -42,8 +42,8 @@ Settings, state and log live in `~/.config/NAVTOK/`.
 | Loot | you loot an epic (or better) item |
 | Need roll | you **win anything on a Need roll**: "Won [Item] (Need 87)" |
 | BoE equipped | you equip a Bind-on-Equip item (blue or better) |
-| Recipe | you learn a recipe/pattern/plan **from an item** (green or better; trainer recipes are not posted) |
-| Quest reward | notable quest turn-ins: **attunements** (Onyxia, Molten Core), **Tier 0.5** upgrade stages, **epic** rewards, blue rewards from **dungeon/raid quests**, and a short allowlist (Carrot on a Stick, ...) |
+| Recipe | you learn a recipe/pattern/plan **from an item**: Alchemy and Enchanting from green, other professions from blue (trainer recipes are not posted) |
+| Quest reward | notable quest turn-ins: **attunements** (Onyxia, Molten Core), **Tier 0.5** upgrade stages, **epic** rewards, blue rewards from **dungeon/raid quests** that your class can equip, and a short allowlist (Carrot on a Stick, ...) |
 | Riding | you learn riding (normal mount) or epic riding |
 | Dual spec | you unlock Dual Specialization |
 | Skill | a profession or weapon skill reaches 75 / 150 / 225 / 300 |

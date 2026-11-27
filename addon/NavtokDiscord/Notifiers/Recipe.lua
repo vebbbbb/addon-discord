@@ -1,6 +1,8 @@
--- Notifiers/Recipe.lua: a recipe/pattern/plan/formula learned FROM AN ITEM (green or better by
--- default, settings.recipeMinQuality). Trainer recipes are not posted: the "You have learned ..."
--- message only counts when a Recipe-class item (classID 9) was used from the bags just before.
+-- Notifiers/Recipe.lua: a recipe/pattern/plan/formula learned FROM AN ITEM. Blue or better by
+-- default (settings.recipeMinQuality); Alchemy and Enchanting from green
+-- (settings.recipeMinQualityBy, keyed by the recipe subclass: 6 Alchemy, 8 Enchanting).
+-- Trainer recipes are not posted: the "You have learned ..." message only counts when a
+-- Recipe-class item (classID 9) was used from the bags just before.
 local _, ns = ...
 local N = ns.NewNotifier("recipe")
 
@@ -46,7 +48,10 @@ function N:OnSystem(msg)
     if learned then
       self.used = nil
       local name, _, quality = GetItemInfo(u.link)
-      if (quality or 0) < (tonumber((ns.settings or ns.DEFAULTS).recipeMinQuality) or 2) then return end
+      local st = ns.settings or ns.DEFAULTS
+      local subclass = GetItemInfoInstant and select(7, GetItemInfoInstant(u.link))
+      local minQ = (st.recipeMinQualityBy or {})[subclass or -1] or tonumber(st.recipeMinQuality) or 3
+      if (quality or 0) < minQ then return end
       ns.Emit("recipe", { itemId = tonumber(u.link:match("item:(%d+)")), quality = quality,
         item = name or u.link:match("%[(.-)%]"), learned = (ns.StripCodes(learned):gsub("^%[(.*)%]$", "%1")) })
       return
