@@ -24,7 +24,7 @@ local DEFAULTS = {
   -- post types players can switch off (/navtok settings). Deaths are always posted.
   enabled = { loot = true, need = true, skill = true, level = true, reputation = true, dungeon = true,
     bg = true, rare = true, legacy = true, equip = true, recipe = true, quest = true, riding = true,
-    dualspec = true },
+    dualspec = true, pvp = true },
   levelEvery = 1,          -- post every N levels (the max level is always posted)
   maxLevel = 60,
   equipMinQuality = 3,     -- BoE items equipped: 3 = blue (rare) or better

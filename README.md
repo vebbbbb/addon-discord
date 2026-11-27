@@ -46,16 +46,21 @@ Settings, state and log live in `~/.config/NAVTOK/`.
 | Quest reward | notable quest turn-ins: **attunements** (Onyxia, Molten Core), **Tier 0.5** upgrade stages, **epic** rewards, blue rewards from **dungeon/raid quests** that your class can equip, and a short allowlist (Carrot on a Stick, ...) |
 | Riding | you learn riding (normal mount) or epic riding |
 | Dual spec | you unlock Dual Specialization |
+| PvP | your **PvP rank goes up**, **lifetime honorable kill milestones** (100, 250, 500, 1,000 ...), and one **world PvP summary** after a fight ("Veb, Kjell: 9 honorable kills in Hillsbrad" + the players you killed). Never from battlegrounds. |
 | Skill | a profession or weapon skill reaches 75 / 150 / 225 / 300 |
 | Level | you level up (screenshot catches the level-up glow) |
 | Reputation | you reach Friendly, Honored, Revered or Exalted with a faction |
-| Death | you die (zone, and the killer when it can be told); **PvP deaths** show as "Killed by \<player\> (PvP)" in red. Deaths can't be switched off. |
+| Death | you die (zone, and the killer when it can be told); **PvP deaths** show as "Killed by \<player\> (PvP)" in red. Every **50th death** (lifetime) and every **50th death to another player** gets an extra line. Deaths can't be switched off. |
 | Dungeon / raid | you kill a final boss from NAVTOK's list (instant post). Left without the final boss? When you leave (alive) WoW asks *"Did you complete Blackmaw Hold?"*; **Yes** posts it with the screenshot of your last boss kill. Dying and running back never asks. |
 | Rare | you kill a rare or rare-elite mob |
 | Battleground | a battleground ends: win or loss, duration, your kills, deaths and honor |
 | Legacy | you complete a legacy challenge (all 176 from the game data: Classes, Tradeskills, Dungeons, Raids, PvP, Adventure) |
 
 Chat is hidden for the one frame the screenshot is taken, so whispers never end up in Discord.
+
+**Groups:** the NAVTOK addons in a party/raid/battleground talk to each other, so a boss, a rare,
+a dungeon summary, a battleground result or a world PvP fight is posted **once for the group**
+(with the group's names), not once per player. Deaths are always posted for everyone.
 
 **Searching the channel:** every post has a small grey line like `Kjell · death`. Search Discord for
 `Kjell death`, `Kjell pvp`, `Kjell need`, `Kjell level` and so on.

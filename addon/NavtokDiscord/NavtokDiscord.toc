@@ -14,6 +14,7 @@ Data\Attunements.lua
 Data\QuestRewards.lua
 Data\ClassGear.lua
 Core.lua
+Group.lua
 Barcode.lua
 Screenshot.lua
 Probe.lua
@@ -30,5 +31,6 @@ Notifiers\Equip.lua
 Notifiers\Recipe.lua
 Notifiers\Quest.lua
 Notifiers\Unlock.lua
+Notifiers\PvP.lua
 Options.lua
 Commands.lua

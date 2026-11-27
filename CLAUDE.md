@@ -32,6 +32,7 @@ addon/NavtokDiscord/          the addon, exactly as installed (embedded into NAV
   Data/Dungeons.lua           final bosses (MAINTAINED BY HAND; ids via gen_data.py --encounters)
   Data/Legacy.lua             legacy challenges = achievements (GENERATED, same script)
   Core.lua                    namespace, DB, event dispatch (ns.On), ns.Emit, ring buffer
+  Group.lua                   group coordination over addon messages (one post per group)
   Barcode.lua                 payload/frame/grid encoder + pixel-perfect drawing
   Screenshot.lua              queue, rate limit, chat hiding, barcode -> Screenshot() -> hide
   Probe.lua                   /navtok probe (VERIFY.md data collection)
@@ -126,12 +127,19 @@ SavedVariables JSON line (sorted keys), produced by `Core.lua` `ns.Emit`:
 | recipe | itemId, quality, item, learned | hooked UseContainerItem on a Recipe-class item (classID 9), then ERR_LEARN_RECIPE_S/ERR_LEARN_SPELL_S within 10 s (trainer recipes never match); quality ≥ `recipeMinQualityBy[subclass]` (Alchemy 6 / Enchanting 8: green) else `recipeMinQuality` (3, blue) | 0 |
 | quest | sub, questId, itemId, quality, stage, item, extra, quest | QUEST_COMPLETE snapshot (GetQuestID, GetTitleText, GetQuestItemLink reward/choice, GetQuestTagInfo); chosen reward via hooksecurefunc("GetQuestReward"); post after QUEST_TURNED_IN confirmed by LOOT_ITEM_PUSHED_SELF (5 s timeout, immediately when no item is expected). Highest priority wins: attunement (Data/Attunements.lua) > tier05 (Data/QuestRewards.lua Tier05) > epic (q>=4) > dungeon (q>=3, tag Dungeon/Raid, class can equip it per Data/ClassGear.lua; level is ignored) > allowlist (Data/QuestRewards.lua) | 0.3 s |
 | unlock | sub, rank, skill | riding: skill list scan on SKILL_LINES_CHANGED (names with Riding/Horsemanship/Piloting) crossing 75 (riding) or 150 (epicriding), first scan seeds; dualspec: GetNumTalentGroups 1 -> 2 (seeded at login), system-message fallback; once per character. Settings kinds `riding`, `dualspec` | 0 |
+| pvp | sub, count, rank, duration, shotSeq, zone, extra, group, victims | rank: UnitPVPRank up (seeded); hk: statistic 588 / GetPVPLifetimeStats crossing 100, 250, 500, 1000...; worldpvp: CHAT_MSG_COMBAT_HONOR_GAIN outside battlegrounds, unique victims shared with the group, after 300 s quiet one post (>= 3 kills) by the alphabetically first participant, candidate kill screenshot (max one per 30 s) | 0 |
 | rare | npcId, classification, mobLevel, npc, zone, subzone | rare/rareelite unit (target, mouseover, nameplate) becomes dead and is not tap-denied, or CHAT_MSG_COMBAT_XP_GAIN "X dies..." for a rare seen in the last 120 s; once per GUID | 0 |
 
 Settings (`Options.lua`, `/navtok settings`): `settings.enabled[kind]` switches each kind off
 (`ns.Emit(..., {kind=...})`; need wins use kind `need`); deaths can never be switched off; test
 events ignore the switches. Discord posts carry `content` "-# <char> · <tag>" (discord.SearchTag)
 because Discord search indexes message text, not embeds.
+
+Group coordination (`Group.lua`, prefix "NAVTOK", PARTY/RAID/BATTLEGROUND): `ns.Group.Share(key, fn)`
+claims `key` ("K:<encounter>", "E:<guid>", "B:<bg key>"); after 1.5 s only the alphabetically first
+claimant runs fn (solo: immediately). `ns.Group.Done("S:<map>")` tells the group a dungeon summary
+was posted (their popup closes). World PvP kills are shared as "H <victim>". Deaths never use it.
+Death posts carry `deathNo` / `pvpDeathNo` on every 50th death (statistics 60 / 1501, seeded at login).
 
 Test events (`/navtok test <type>`) set `test=true`. Discord titles get a `[TEST] ` prefix and
 late posts a ` (late)` suffix.

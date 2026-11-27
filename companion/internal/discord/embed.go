@@ -171,6 +171,15 @@ func questEmbed(e *event.Event, em *Embed, wowhead string) {
 	itemURL()
 }
 
+// thousands formats 1000 as "1,000".
+func thousands(n int) string {
+	s := fmt.Sprint(n)
+	for i := len(s) - 3; i > 0; i -= 3 {
+		s = s[:i] + "," + s[i:]
+	}
+	return s
+}
+
 func firstNonEmpty(a, b string) string {
 	if a != "" {
 		return a
@@ -191,6 +200,8 @@ func SearchTag(e *event.Event) string {
 		return "boe equip"
 	case e.Type == "quest":
 		return "quest " + e.Get("sub")
+	case e.Type == "pvp":
+		return "pvp " + e.Get("sub")
 	case e.Type == "unlock":
 		switch e.Get("sub") {
 		case "dualspec":
@@ -281,6 +292,13 @@ func Build(e *event.Event, o Options) Message {
 			em.Description = "Killed by **" + mdEscape(k) + "**"
 		}
 		em.Color = classColor(e)
+		var milestones []string
+		if n := e.Int("deathNo"); n > 0 {
+			milestones = append(milestones, fmt.Sprintf("💀 Death #%d!", n))
+		}
+		if n := e.Int("pvpDeathNo"); n > 0 {
+			milestones = append(milestones, fmt.Sprintf("⚔️ Death #%d to another player!", n))
+		}
 		if e.Get("pvp") == "1" {
 			if k := e.Get("killer"); k != "" {
 				em.Title = "Killed by " + k + " (PvP)"
@@ -289,6 +307,9 @@ func Build(e *event.Event, o Options) Message {
 				em.Title += " (PvP)"
 			}
 			em.Color = colorLoss
+		}
+		if len(milestones) > 0 {
+			em.Description = strings.TrimSpace(em.Description + "\n" + strings.Join(milestones, "\n"))
 		}
 	case "equip":
 		item := e.Get("item")
@@ -302,6 +323,33 @@ func Build(e *event.Event, o Options) Message {
 		}
 	case "quest":
 		questEmbed(e, &em, wowhead)
+	case "pvp":
+		switch e.Get("sub") {
+		case "rank":
+			em.Title = e.Char + " reached " + e.Get("extra") + " (Rank " + e.Get("rank") + ")!"
+			em.Color = colorTier05
+		case "hk":
+			em.Title = e.Char + " reached " + thousands(e.Int("count")) + " honorable kills!"
+			em.Color = colorLoss
+		default: // worldpvp
+			who := e.Get("group")
+			if who == "" {
+				who = e.Char
+			}
+			em.Title = fmt.Sprintf("%s: %d honorable kills", who, e.Int("count"))
+			desc := ""
+			if z := e.Get("zone"); z != "" {
+				desc = "in " + mdEscape(z)
+			}
+			if d := e.Int("duration"); d > 0 {
+				desc += " (" + fmtDuration(d) + ")"
+			}
+			if v := e.Get("victims"); v != "" {
+				desc += "\n**Killed:** " + mdEscape(v)
+			}
+			em.Description = strings.TrimSpace(desc)
+			em.Color = colorLoss
+		}
 	case "unlock":
 		switch e.Get("sub") {
 		case "epicriding":
@@ -420,6 +468,9 @@ func Build(e *event.Event, o Options) Message {
 		em.Color = colorWin
 	default:
 		em.Title = titleCase(e.Type)
+	}
+	if g := e.Get("group"); g != "" && (e.Type == "dungeon" || e.Type == "rare" || e.Type == "bg") {
+		em.Fields = append(em.Fields, EmbedField{Name: "Group", Value: mdEscape(g)})
 	}
 	if e.Test && e.Type != "test" {
 		em.Title = "[TEST] " + em.Title

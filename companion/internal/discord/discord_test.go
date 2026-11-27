@@ -347,6 +347,30 @@ func TestQuestAndUnlockEmbeds(t *testing.T) {
 	}
 }
 
+func TestPvPGroupAndDeathMilestones(t *testing.T) {
+	o := Options{}
+	r := Build(ev("pvp", map[string]string{"sub": "rank", "rank": "7", "extra": "Knight-Lieutenant"}), o)
+	if r.Embeds[0].Title != "Navtok reached Knight-Lieutenant (Rank 7)!" || r.Content != "-# Navtok · pvp rank" {
+		t.Fatalf("%q %q", r.Embeds[0].Title, r.Content)
+	}
+	if h := Build(ev("pvp", map[string]string{"sub": "hk", "count": "1000"}), o).Embeds[0].Title; h != "Navtok reached 1,000 honorable kills!" {
+		t.Fatal(h)
+	}
+	w := Build(ev("pvp", map[string]string{"sub": "worldpvp", "count": "9", "zone": "Hillsbrad Foothills", "duration": "720",
+		"group": "Kjell, Rune, Veb", "victims": "Ganker, Shadowpriest"}), o).Embeds[0]
+	if w.Title != "Kjell, Rune, Veb: 9 honorable kills" || w.Description != "in Hillsbrad Foothills (12m 00s)\n**Killed:** Ganker, Shadowpriest" {
+		t.Fatalf("%q %q", w.Title, w.Description)
+	}
+	d := Build(ev("death", map[string]string{"zone": "STV", "killer": "Gankster", "pvp": "1", "deathNo": "100", "pvpDeathNo": "50"}), o).Embeds[0]
+	if d.Description != "in STV\n💀 Death #100!\n⚔️ Death #50 to another player!" {
+		t.Fatalf("%q", d.Description)
+	}
+	g := Build(ev("dungeon", map[string]string{"encounter": "Edwin VanCleef", "instance": "Deadmines", "group": "Veb, Kjell"}), o).Embeds[0]
+	if len(g.Fields) != 1 || g.Fields[0].Name != "Group" || g.Fields[0].Value != "Veb, Kjell" {
+		t.Fatalf("%+v", g.Fields)
+	}
+}
+
 func TestNeedWinEmbed(t *testing.T) {
 	e := ev("loot", map[string]string{"itemId": "2000", "quality": "2", "count": "1", "item": "Green Boots", "roll": "need", "rollValue": "87"})
 	em := Build(e, Options{WowheadBase: "https://www.wowhead.com/forever"}).Embeds[0]

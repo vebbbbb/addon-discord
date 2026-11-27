@@ -15,7 +15,7 @@ B.SEP = "\31"            -- ASCII unit separator between payload fields
 
 B.TYPE_CODES = {
   loot = "L", skill = "S", level = "V", reputation = "R",
-  death = "D", dungeon = "K", bg = "B", legacy = "G", rare = "E", equip = "Q", recipe = "P", quest = "U", unlock = "M",
+  death = "D", dungeon = "K", bg = "B", legacy = "G", rare = "E", equip = "Q", recipe = "P", quest = "U", unlock = "M", pvp = "H",
 }
 
 -- Type specific payload fields, in order. Shared with the companion (internal/event/payload.go).
@@ -24,11 +24,12 @@ B.FIELDS = {
   skill      = { "skill", "rank" },
   level      = { "zone" },
   reputation = { "faction", "standing" },
-  death      = { "zone", "subzone", "killer", "pvp" },
-  dungeon    = { "encounterId", "encounter", "instance", "bosses", "duration", "shotSeq" },
-  bg         = { "bg", "result", "duration", "kb", "hk", "deaths", "honor" },
+  death      = { "zone", "subzone", "killer", "pvp", "deathNo", "pvpDeathNo" },
+  dungeon    = { "encounterId", "encounter", "instance", "bosses", "duration", "shotSeq", "group" },
+  bg         = { "bg", "result", "duration", "kb", "hk", "deaths", "honor", "group" },
   legacy     = { "achievementId", "text", "group" },
-  rare       = { "npcId", "classification", "mobLevel", "npc", "zone", "subzone" },
+  rare       = { "npcId", "classification", "mobLevel", "npc", "zone", "subzone", "group" },
+  pvp        = { "sub", "count", "rank", "duration", "shotSeq", "zone", "extra", "group", "victims" },
   equip      = { "itemId", "quality", "slot", "item" },
   recipe     = { "itemId", "quality", "item", "learned" },
   quest      = { "sub", "questId", "itemId", "quality", "stage", "item", "extra", "quest" },
@@ -38,8 +39,9 @@ B.FIELDS = {
 -- Free-text fields that may be shortened (first entry is shortened first) to fit MAX_PAYLOAD.
 B.TRIM_ORDER = {
   loot = { "item" }, skill = { "skill" }, level = { "zone" }, reputation = { "faction" },
-  death = { "subzone", "killer", "zone" }, dungeon = { "instance", "encounter" },
-  bg = { "bg" }, legacy = { "group", "text" }, rare = { "subzone", "zone", "npc" },
+  death = { "subzone", "killer", "zone" }, dungeon = { "instance", "group", "encounter" },
+  bg = { "group", "bg" }, legacy = { "group", "text" }, rare = { "subzone", "group", "zone", "npc" },
+  pvp = { "victims", "zone", "group", "extra" },
   equip = { "item" }, recipe = { "learned", "item" }, quest = { "quest", "extra", "item" },
   unlock = { "skill" },
 }

@@ -192,6 +192,19 @@ name. Copy the IDs into `Data/Attunements.lua` /
   `GetNumTalentGroups()` exist (`/run print(GetNumTalentGroups and GetNumTalentGroups())`)?
   Note the system message shown when it is learned.
 
+## 7g. Group coordination, PvP, death milestones
+
+- [ ] Addon messages work: in a party with two NAVTOK players, kill a dungeon's final boss ->
+  exactly ONE post with "Group: ..." (the alphabetically first name posts). Same for a rare.
+- [ ] Leave a dungeon without the final boss with 2 NAVTOK players: the first "Yes" posts, the
+  other player's popup closes.
+- [ ] Battleground: two NAVTOK players in the same battleground -> one result post.
+- [ ] `GetStatistic(60)` (Total deaths) and `GetStatistic(1501)` (deaths from other players) return
+  numbers: `/run print(GetStatistic(60), GetStatistic(1501), GetStatistic(588))`.
+- [ ] `CHAT_MSG_COMBAT_HONOR_GAIN` fires for world PvP kills; text "X dies, honorable kill Rank: ...".
+- [ ] `UnitPVPRank("player")` / `GetPVPRankInfo` work and `PLAYER_PVP_RANK_CHANGED` fires on the
+  weekly rank update.
+
 ## 8. Physical pixel size / UI scale for pixel-perfect drawing
 
 - [ ] **Result:** ______

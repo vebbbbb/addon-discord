@@ -54,12 +54,12 @@ func (e *Event) Int(k string) int {
 }
 
 // Types lists the known event types in display order.
-var Types = []string{"loot", "skill", "level", "reputation", "death", "dungeon", "bg", "legacy", "rare", "equip", "recipe", "quest", "unlock"}
+var Types = []string{"loot", "skill", "level", "reputation", "death", "dungeon", "bg", "legacy", "rare", "equip", "recipe", "quest", "unlock", "pvp"}
 
 // typeCodes and fields mirror Barcode.lua (TYPE_CODES / FIELDS).
 var typeCodes = map[string]string{
 	"L": "loot", "S": "skill", "V": "level", "R": "reputation",
-	"D": "death", "K": "dungeon", "B": "bg", "G": "legacy", "E": "rare", "Q": "equip", "P": "recipe", "U": "quest", "M": "unlock",
+	"D": "death", "K": "dungeon", "B": "bg", "G": "legacy", "E": "rare", "Q": "equip", "P": "recipe", "U": "quest", "M": "unlock", "H": "pvp",
 }
 
 var fields = map[string][]string{
@@ -67,11 +67,12 @@ var fields = map[string][]string{
 	"skill":      {"skill", "rank"},
 	"level":      {"zone"},
 	"reputation": {"faction", "standing"},
-	"death":      {"zone", "subzone", "killer", "pvp"},
-	"dungeon":    {"encounterId", "encounter", "instance", "bosses", "duration", "shotSeq"},
-	"bg":         {"bg", "result", "duration", "kb", "hk", "deaths", "honor"},
+	"death":      {"zone", "subzone", "killer", "pvp", "deathNo", "pvpDeathNo"},
+	"dungeon":    {"encounterId", "encounter", "instance", "bosses", "duration", "shotSeq", "group"},
+	"bg":         {"bg", "result", "duration", "kb", "hk", "deaths", "honor", "group"},
 	"legacy":     {"achievementId", "text", "group"},
-	"rare":       {"npcId", "classification", "mobLevel", "npc", "zone", "subzone"},
+	"rare":       {"npcId", "classification", "mobLevel", "npc", "zone", "subzone", "group"},
+	"pvp":        {"sub", "count", "rank", "duration", "shotSeq", "zone", "extra", "group", "victims"},
 	"equip":      {"itemId", "quality", "slot", "item"},
 	"recipe":     {"itemId", "quality", "item", "learned"},
 	"quest":      {"sub", "questId", "itemId", "quality", "stage", "item", "extra", "quest"},

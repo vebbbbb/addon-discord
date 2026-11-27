@@ -6,6 +6,31 @@ local N = ns.NewNotifier("death")
 
 N.LOGIN_GRACE = 3
 N.REPEAT_GRACE = 10 -- Forever fires PLAYER_DEAD twice for one death (seen in the wild)
+N.MILESTONE = 50    -- every 50th death gets a "Death #50!" line
+N.STAT_TOTAL_DEATHS = 60  -- Statistics: "Total deaths" (Forever's achievement data)
+N.STAT_PVP_DEATHS = 1501  -- Statistics: "Total deaths from other players"
+
+local function stat(id)
+  if not GetStatistic then return nil end
+  local ok, v = pcall(GetStatistic, id)
+  return ok and tonumber(v) or nil -- "--" when 0
+end
+
+-- Reads the lifetime counters at login, so the first death afterwards is numbered correctly
+-- whether or not the statistic already includes it when PLAYER_DEAD fires.
+function N:SeedCounters()
+  local c = ns.char
+  c.deathTotal = stat(N.STAT_TOTAL_DEATHS) or c.deathTotal or 0
+  c.pvpDeathTotal = stat(N.STAT_PVP_DEATHS) or c.pvpDeathTotal or 0
+end
+
+-- Next value of a lifetime counter: the statistic, but at least the previous value + 1.
+local function nextCount(field, statId)
+  local c = ns.char
+  local n = math.max(stat(statId) or 0, (c[field] or 0) + 1)
+  c[field] = n
+  return n
+end
 
 -- name, isPlayer of a hostile unit
 local function hostileName(unit)
@@ -37,7 +62,11 @@ function N:Handle()
   if self.lastDeath and GetTime() - self.lastDeath < self.REPEAT_GRACE then return end
   self.lastDeath = GetTime()
   local killer, byPlayer = self:Killer()
+  local total = nextCount("deathTotal", N.STAT_TOTAL_DEATHS)
+  local pvpTotal = byPlayer and nextCount("pvpDeathTotal", N.STAT_PVP_DEATHS) or nil
   ns.Emit("death", {
+    deathNo = (total % N.MILESTONE == 0) and total or nil,
+    pvpDeathNo = (pvpTotal and pvpTotal % N.MILESTONE == 0) and pvpTotal or nil,
     zone = GetRealZoneText and GetRealZoneText() or "",
     subzone = GetSubZoneText and GetSubZoneText() or "",
     killer = killer,
@@ -47,6 +76,7 @@ function N:Handle()
 end
 
 function N:Init()
+  self:SeedCounters()
   ns.On("PLAYER_DEAD", function() N:Handle() end)
   ns.On("PLAYER_TARGET_CHANGED", function()
     local name, isPlayer = hostileName("target")

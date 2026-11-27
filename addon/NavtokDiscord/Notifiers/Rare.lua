@@ -38,12 +38,16 @@ end
 function N:Post(guid, s)
   if self.posted[guid] then return end
   self.posted[guid] = true
-  ns.Emit("rare", {
+  local data = {
     npc = s.name, npcId = s.npcId, classification = s.classification,
     mobLevel = (s.level and s.level > 0) and s.level or nil,
     zone = GetRealZoneText and GetRealZoneText() or "",
     subzone = GetSubZoneText and GetSubZoneText() or "",
-  })
+  }
+  ns.Group.Share("E:" .. tostring(guid), function() -- one post per group
+    data.group = ns.Group.MembersText()
+    ns.Emit("rare", data)
+  end)
 end
 
 function N:Check(unit)

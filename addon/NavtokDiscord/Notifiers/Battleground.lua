@@ -84,12 +84,18 @@ function N:Check()
   ns.After(self.SCORE_DELAY, function()
     self.waiting = false
     local row = self:OwnRow()
-    ns.Emit("bg", {
+    local data = {
       bg = mapName,
       result = self:Result(winner),
       duration = math.floor((runMs or 0) / 1000),
       kb = row.kb, hk = row.hk, deaths = row.deaths, honor = row.honor,
-    }, { priority = true })
+    }
+    -- one post per group (guild members in the same battleground)
+    ns.Group.Share("B:" .. keys[1], function()
+      local names = ns.Group.InGroup() and ns.Group.PartyText() or nil
+      data.group = names
+      ns.Emit("bg", data, { priority = true })
+    end)
   end)
 end
 

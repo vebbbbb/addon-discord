@@ -43,6 +43,7 @@ func main() {
 		"recipe":     {"itemId": "13518", "quality": "2", "item": "Recipe: Flask of Petrification", "learned": "Flask of Petrification"},
 		"quest":      {"sub": "attunement", "questId": "6502", "itemId": "16309", "quality": "4", "item": "Drakefire Amulet", "extra": "Onyxia's Lair", "quest": "Drakefire Amulet"},
 		"unlock":     {"sub": "epicriding", "skill": "Horse Riding", "rank": "150"},
+		"pvp":        {"sub": "worldpvp", "count": "9", "zone": "Hillsbrad Foothills", "duration": "720", "group": "Kjell, Rune, Veb", "victims": "Ganker, Shadowpriest"},
 		"rare":       {"npcId": "522", "classification": "rareelite", "mobLevel": "35", "npc": "Mor'Ladim", "zone": "Duskwood", "subzone": "Tranquil Gardens Cemetery"},
 	}
 	data, ok := samples[*typ]

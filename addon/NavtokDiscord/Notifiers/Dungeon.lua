@@ -28,12 +28,19 @@ end
 function N:Run() return ns.char and ns.char.run end
 
 -- Posts the summary of a run whose completion the player confirmed.
+N.SUMMARY_TTL = 1800 -- a group member's summary covers our run of the same instance this long
+
+local function summaryKey(run) return "S:" .. tostring(run.map) end
+
 function N:PostSummary(run)
   if not run or run.posted then return end
   run.posted = true
+  if ns.Group.IsDone(summaryKey(run), N.SUMMARY_TTL) then return end -- someone in the group posted it
+  ns.Group.Done(summaryKey(run)) -- the others' popups close / are never shown
   ns.Emit("dungeon", {
     encounter = run.lastBoss, instance = run.instance, bosses = run.bosses,
     duration = math.max(0, (run.lastAt or time()) - run.start), shotSeq = run.lastSeq,
+    group = ns.Group.MembersText(),
   }, { priority = true })
 end
 
@@ -41,6 +48,7 @@ end
 function N:Ask(run)
   if not run or run.done or run.posted or (run.bosses or 0) == 0 or not run.lastSeq then return end
   if not ns.IsEnabled("dungeon") then return end
+  if ns.Group.IsDone(summaryKey(run), N.SUMMARY_TTL) then return end -- a group member already posted
   if not (StaticPopupDialogs and StaticPopup_Show) then
     ns.Print(run.instance .. ": " .. run.bosses .. " bosses. Type /navtok done to post it.")
     N.pending = run
@@ -107,10 +115,15 @@ function N:Handle(encounterID, encounterName, difficultyID, groupSize, success)
   end
   if entry then
     if run then run.done = true end
-    ns.Emit("dungeon", {
+    local data = {
       encounterId = id, encounter = encounterName or entry.boss, instance = entry.instance,
       bosses = run and run.bosses or nil, duration = run and (time() - run.start) or nil,
-    }, { delay = self.DELAY, priority = true })
+    }
+    -- one post per group: the group's NAVTOK addons agree who posts
+    ns.Group.Share("K:" .. tostring(id or encounterName), function()
+      data.group = ns.Group.MembersText()
+      ns.Emit("dungeon", data, { delay = self.DELAY, priority = true })
+    end)
   elseif run and not run.done then
     local ev = ns.Emit("dungeon", { encounterId = id, encounter = encounterName, instance = run.instance },
       { delay = self.DELAY, priority = true, candidate = true })
@@ -121,6 +134,13 @@ function N:Handle(encounterID, encounterName, difficultyID, groupSize, success)
 end
 
 function N:Init()
+  -- a group member posted the summary of the instance we are in / just left: close our popup
+  ns.Group.On("D", function(_, key)
+    if N.pending and summaryKey(N.pending) == key then
+      N.pending.posted = true
+      if StaticPopup_Hide then StaticPopup_Hide(N.POPUP) end
+    end
+  end)
   ns.On("ENCOUNTER_END", function(_, ...) N:Handle(...) end)
   ns.On("PLAYER_ENTERING_WORLD", function() N:Zone() end)
   ns.On("ZONE_CHANGED_NEW_AREA", function() N:Zone() end)

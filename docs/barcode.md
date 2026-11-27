@@ -94,6 +94,7 @@ posted.
 | `Q` | equip | itemId, quality, slot, item | item |
 | `P` | recipe | itemId, quality, item, learned | learned, item |
 | `U` | quest | sub (attunement/tier05/epic/dungeon/allowlist), questId, itemId, quality, stage, item, extra, quest | quest, extra, item |
+| `H` | pvp | sub (rank/hk/worldpvp/kill), count, rank, duration, shotSeq, zone, extra, group, victims | victims, zone, group, extra |
 | `M` | unlock | sub (riding/epicriding/dualspec), rank, skill | skill |
 
 If the payload is longer than 96 bytes, the free-text fields in the right-hand column are

@@ -25,6 +25,12 @@ function W.Reset()
   W.quest = nil                   -- { id, title, rewards = {links}, choices = {links}, spell, tagID, tagName }
   W.skills = {}                   -- list of { name, rank, header }
   W.talentGroups = 1
+  W.party = {}                    -- names of party1..4
+  W.raidSize = 0
+  W.sent = {}                     -- addon messages sent: { prefix, msg, channel }
+  W.stats = {}                    -- GetStatistic(id) values
+  W.pvpRank = 0
+  W.hiddenPopups = {}
   StaticPopupDialogs = {}
   W.items = {}                    -- link or id -> { name, quality } ; missing = uncached
   W.factions = {}                 -- list of { name, standingID, isHeader, hasRep, factionID }
@@ -166,10 +172,16 @@ local function U(unit)
 end
 function UnitName(unit)
   if unit == "player" then return W.player.name, nil end
+  local p = unit:match("^party(%d)$")
+  if p then return W.party[tonumber(p)] end
   local u = U(unit)
   return u and u.name
 end
-function UnitExists(unit) return unit == "player" or U(unit) ~= nil end
+function UnitExists(unit)
+  local p = unit:match("^party(%d)$")
+  if p then return W.party[tonumber(p)] ~= nil end
+  return unit == "player" or U(unit) ~= nil
+end
 function UnitCanAttack(_, unit) local u = U(unit) return u and u.hostile or false end
 function UnitIsPlayer(unit) local u = U(unit) return unit == "player" or (u and u.player) or false end
 function UnitGUID(unit) local u = U(unit) return u and u.guid end
@@ -233,6 +245,20 @@ function GetQuestReward(choice) if W.hooks.GetQuestReward then W.hooks.GetQuestR
 function GetNumSkillLines() return #W.skills end
 function GetSkillLineInfo(i) local s = W.skills[i] return s.name, s.header or false, true, s.rank end
 function GetNumTalentGroups() return W.talentGroups end
+function IsInGroup() return #W.party > 0 or W.raidSize > 0 end
+function IsInRaid() return W.raidSize > 0 end
+function GetNumGroupMembers() return W.raidSize > 0 and W.raidSize or (#W.party > 0 and #W.party + 1 or 0) end
+function Ambiguate(name) return (name:gsub("%-.*$", "")) end
+C_ChatInfo = {
+  RegisterAddonMessagePrefix = function() return true end,
+  SendAddonMessage = function(prefix, msg, channel) W.sent[#W.sent + 1] = { prefix, msg, channel } end,
+}
+-- a message from another group member's NAVTOK
+function W.AddonMsg(sender, msg) W.Fire("CHAT_MSG_ADDON", "NAVTOK", msg, "PARTY", sender .. "-Testrealm") end
+function StaticPopup_Hide(which) W.hiddenPopups[#W.hiddenPopups + 1] = which end
+function GetStatistic(id) return W.stats[id] or "--" end
+function UnitPVPRank() return W.pvpRank end
+function GetPVPRankInfo(rank) return "Rank" .. rank .. "Name", rank - 4 end
 function GetAchievementCategory(id) return W.achievementCategory[id] or -1 end
 function GetCategoryInfo(cat) local c = W.categories[cat] if c then return c.title, c.parent end end
 
@@ -305,6 +331,7 @@ LOOT_ITEM_SELF = "You receive loot: %s."
 LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %sx%d."
 SKILL_RANK_UP = "Your skill in %s has increased to %d."
 LOOT_ROLL_YOU_WON = "You won: %s"
+COMBATLOG_HONORGAIN = "%s dies, honorable kill Rank: %s (Estimated Honor Points: %d)"
 LOOT_ITEM_PUSHED_SELF = "You receive item: %s."
 LOOT_ITEM_PUSHED_SELF_MULTIPLE = "You receive item: %sx%d."
 ITEM_CLASSES_ALLOWED = "Classes: %s"
