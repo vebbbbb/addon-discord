@@ -46,6 +46,27 @@ local function itemIdOf(link)
   return tonumber(link:match("item:(%d+)"))
 end
 
+N.REMEMBER = 24 * 3600 -- seconds a posted loot item is remembered (no "Equipped" post for it)
+
+-- Remembers items posted as loot (per character, survives /reload), so equipping one of them
+-- does not post a second time (Notifiers/Equip.lua).
+function N.Remember(itemId)
+  if not (itemId and ns.char) then return end
+  local t = ns.char.lootPosted or {}
+  ns.char.lootPosted = t
+  local now = time()
+  t[itemId] = now
+  for id, at in pairs(t) do
+    if now - at > N.REMEMBER then t[id] = nil end
+  end
+end
+
+function N.WasPosted(itemId)
+  local t = ns.char and ns.char.lootPosted
+  local at = t and itemId and t[itemId]
+  return at ~= nil and time() - at <= N.REMEMBER
+end
+
 -- Roll patterns are not anchored at the start: Forever's chat shows them as "[Loot]: You won: X".
 local function pattern(global)
   local fmt = _G[global]
@@ -127,11 +148,13 @@ function N:Won(link)
   end
   if (quality or 0) < needMinQuality() then return end
   self.wonByNeed[id] = GetTime()
-  ns.Emit("loot", {
+  if ns.Emit("loot", {
     itemId = id, quality = quality or 1, count = 1,
     item = name or link:match("%[(.-)%]") or ("item " .. id),
     roll = "need", rollValue = self.rollValues[id],
-  }, { kind = "need" })
+  }, { kind = "need" }) then
+    N.Remember(id)
+  end
   self.rollValues[id] = nil
 end
 
@@ -142,7 +165,9 @@ end
 function N:Post(link, count, quality, name)
   local itemId = itemIdOf(link)
   name = name or link:match("%[(.-)%]") or ("item " .. tostring(itemId))
-  ns.Emit("loot", { itemId = itemId, quality = quality, count = count, item = name })
+  if ns.Emit("loot", { itemId = itemId, quality = quality, count = count, item = name }) then
+    N.Remember(itemId)
+  end
 end
 
 function N:Handle(link, count)

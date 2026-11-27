@@ -75,3 +75,41 @@ H.test("death: killed by a player is marked pvp", function()
   W.Fire("PLAYER_DEAD")
   H.ok(not H.EventsOfType(ns, "death")[2].raw:find('"pvp"'), "mob kill is not pvp")
 end)
+
+H.test("equip: a BoE won on Need and then equipped gives one post (also after /reload)", function()
+  local ns = H.Boot()
+  local helm = link(3100, "Blue BoE Helm")
+  W.items[3100] = { name = "Blue BoE Helm", quality = 3 }
+  W.Fire("CHAT_MSG_LOOT", "[Loot]: You have selected Need for: " .. helm)
+  W.Fire("CHAT_MSG_LOOT", "[Loot]: You won: " .. helm)
+  W.Fire("CHAT_MSG_LOOT", "You receive loot: " .. helm .. ".")
+  local ns2 = H.Boot({ db = NavtokDiscordDB }) -- /reload before equipping
+  W.items[3100] = { name = "Blue BoE Helm", quality = 3 }
+  W.cursor = helm
+  W.Fire("EQUIP_BIND_CONFIRM", 1)
+  W.equipped[1] = helm
+  W.Fire("PLAYER_EQUIPMENT_CHANGED", 1, true)
+  H.eq(#H.EventsOfType(ns2, "equip"), 0, "no Equipped post")
+  H.eq(#H.EventsOfType(ns2, "loot"), 1, "just the need win")
+  -- a different BoE (not won/looted as a post) still posts when equipped
+  local other = link(3101, "Other BoE")
+  W.items[3101] = { name = "Other BoE", quality = 3 }
+  W.cursor = other
+  W.Fire("EQUIP_BIND_CONFIRM", 1)
+  W.equipped[1] = other
+  W.Fire("PLAYER_EQUIPMENT_CHANGED", 1, true)
+  H.eq(#H.EventsOfType(ns2, "equip"), 1)
+end)
+
+H.test("equip: an epic BoE looted (posted) and equipped gives one post", function()
+  local ns = H.Boot()
+  local sword = link(3200, "Epic BoE Sword", "a335ee")
+  W.items[3200] = { name = "Epic BoE Sword", quality = 4 }
+  W.Fire("CHAT_MSG_LOOT", "You receive loot: " .. sword .. ".")
+  W.cursor = sword
+  W.Fire("EQUIP_BIND_CONFIRM", 16)
+  W.equipped[16] = sword
+  W.Fire("PLAYER_EQUIPMENT_CHANGED", 16, true)
+  H.eq(#H.EventsOfType(ns, "loot"), 1)
+  H.eq(#H.EventsOfType(ns, "equip"), 0)
+end)

@@ -25,6 +25,8 @@ function N:OnEquipmentChanged(slot)
   local id = itemIdOf(link)
   if not id or (p.id and p.id ~= id) then return end
   self.pending = nil
+  -- already posted as loot (need win / epic loot) in the last 24 h: one post per item
+  if ns.notifiers.loot and ns.notifiers.loot.WasPosted(id) then return end
   local name, _, quality = GetItemInfo(link)
   if (quality or 0) < (tonumber((ns.settings or ns.DEFAULTS).equipMinQuality) or 3) then return end
   ns.Emit("equip", { itemId = id, quality = quality, slot = slot,
