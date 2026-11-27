@@ -1,10 +1,9 @@
 -- Notifiers/Quest.lua: notable quest turn-ins. One post per quest, the highest-priority rule wins:
 --   1 attunement  quest/item listed in Data/Attunements.lua      "<name> is attuned to <raid>!"
 --   2 tier05      title (or ID) in Data/QuestRewards.lua Tier05  "upgraded <pieces> to Tier 0.5 (n/4)"
---   3 class       GetRewardSpell() or a class-restricted reward item (tooltip "Classes: ...")
---   4 epic        any reward item of quality >= 4
---   5 dungeon     reward quality >= 3 and the quest tag is Dungeon/Raid (GetQuestTagInfo)
---   6 allowlist   reward item in Data/QuestRewards.lua QuestRewardAllowlist
+--   3 epic        any reward item of quality >= 4
+--   4 dungeon     reward quality >= 3 and the quest tag is Dungeon/Raid (GetQuestTagInfo)
+--   5 allowlist   reward item in Data/QuestRewards.lua QuestRewardAllowlist
 -- Everything is read on QUEST_COMPLETE (the quest is still in the log); the chosen reward comes from
 -- hooksecurefunc("GetQuestReward"); the post is sent after QUEST_TURNED_IN, confirmed by the
 -- "You receive item: X" message (LOOT_ITEM_PUSHED_SELF), or right away when no item is expected.
@@ -58,50 +57,14 @@ local function isDungeonTag(id, name)
     or n:find("raid", 1, true) ~= nil
 end
 
--- Tooltip lines of an item (replaced in tests).
-function N.TooltipLines(link)
-  if not N.tip then
-    N.tip = CreateFrame("GameTooltip", "NavtokScanTooltip", nil, "GameTooltipTemplate")
-  end
-  local tip = N.tip
-  tip:SetOwner(WorldFrame or UIParent, "ANCHOR_NONE")
-  tip:ClearLines()
-  tip:SetHyperlink(link)
-  local lines = {}
-  for i = 1, (tip:NumLines() or 0) do
-    local fs = _G["NavtokScanTooltipTextLeft" .. i]
-    local t = fs and fs:GetText()
-    if t then lines[#lines + 1] = t end
-  end
-  tip:Hide()
-  return lines
-end
-
--- Returns the "Classes: Warrior" text if the item is class-restricted.
-function N.ClassRestriction(link)
-  local fmt = ITEM_CLASSES_ALLOWED or "Classes: %s"
-  local pat = ns.FormatToPattern(fmt)
-  local ok, lines = pcall(N.TooltipLines, link)
-  if not ok or type(lines) ~= "table" then return nil end
-  for _, l in ipairs(lines) do
-    local classes = ns.StripCodes(l):match(pat)
-    if classes then return classes end
-  end
-end
-
 function N:Snapshot()
   local questID = GetQuestID and GetQuestID()
   local tagID, tagName = questTag(questID)
-  local spellName
-  if GetRewardSpell then
-    local ok, a, b = pcall(GetRewardSpell)
-    if ok then spellName = (type(b) == "string" and b) or (type(a) == "string" and not a:find("^Interface") and a) or nil end
-  end
   local snap = {
     questID = questID, title = GetTitleText and GetTitleText() or "?",
     rewards = readItems("reward", GetNumQuestRewards and GetNumQuestRewards() or 0),
     choices = readItems("choice", GetNumQuestChoices and GetNumQuestChoices() or 0),
-    spell = spellName, tagID = tagID, tagName = tagName, at = GetTime(),
+    tagID = tagID, tagName = tagName, at = GetTime(),
   }
   self.snap = snap
   if ns.db and ns.db.probeQuest then self:ProbePrint(snap) end
@@ -110,12 +73,11 @@ end
 
 function N:ProbePrint(snap)
   local log = ns.Probe and ns.Probe.Log or ns.Print
-  log(("quest %s \"%s\" tag=%s/%s spell=%s"):format(tostring(snap.questID), snap.title, tostring(snap.tagID),
-    tostring(snap.tagName), tostring(snap.spell)))
+  log(("quest %s \"%s\" tag=%s/%s"):format(tostring(snap.questID), snap.title, tostring(snap.tagID),
+    tostring(snap.tagName)))
   for _, kind in ipairs({ "rewards", "choices" }) do
     for i, it in pairs(snap[kind]) do
-      log(("  %s %d: id=%s q=%s %s class=%s"):format(kind, i, tostring(it.id), tostring(it.quality),
-        tostring(it.name), tostring(N.ClassRestriction(it.link))))
+      log(("  %s %d: id=%s q=%s %s"):format(kind, i, tostring(it.id), tostring(it.quality), tostring(it.name)))
     end
   end
 end
@@ -180,24 +142,15 @@ function N:Classify(snap)
     return "tier05", with({ stage = stage, extra = table.concat(names, ", "), item = it and it.name,
       itemId = it and it.id, quality = it and it.quality })
   end
-  -- 3 class quest
-  if snap.spell then
-    return "class", with({ extra = snap.spell })
-  end
-  for _, it in ipairs(items) do
-    if N.ClassRestriction(it.link) then
-      return "class", with({ item = it.name, itemId = it.id, quality = it.quality })
-    end
-  end
-  -- 4 epic
+  -- 3 epic
   local epic = best(items, 4)
   if epic then return "epic", with({ item = epic.name, itemId = epic.id, quality = epic.quality }) end
-  -- 5 dungeon / raid quest with a blue+ reward
+  -- 4 dungeon / raid quest with a blue+ reward
   local blue = best(items, 3)
   if blue and isDungeonTag(snap.tagID, snap.tagName) then
     return "dungeon", with({ item = blue.name, itemId = blue.id, quality = blue.quality, extra = snap.tagName })
   end
-  -- 6 allowlist
+  -- 5 allowlist
   for _, it in ipairs(items) do
     for _, e in ipairs(ns.Data.QuestRewardAllowlist or {}) do
       if itemMatches(it, e) then
@@ -226,7 +179,7 @@ function N:OnTurnedIn(questID)
   if questID and snap.questID and tonumber(questID) ~= snap.questID then return end
   snap.turnedIn = true
   if #self:Received(snap) == 0 then
-    self:Post(snap) -- nothing to wait for (spell / attunement without item)
+    self:Post(snap) -- nothing to wait for (e.g. an attunement without an item)
     return
   end
   ns.After(self.CONFIRM_TIMEOUT, function()

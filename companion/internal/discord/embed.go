@@ -159,16 +159,6 @@ func questEmbed(e *event.Event, em *Embed, wowhead string) {
 			em.Description = mdEscape(extra)
 		}
 		em.Color = colorTier05
-	case "class":
-		em.Title = "Completed class quest " + quest
-		reward := item
-		if reward == "" {
-			reward = extra
-		}
-		if reward != "" {
-			em.Description = "→ **" + mdEscape(reward) + "**"
-		}
-		em.Color = classColor(e)
 	case "dungeon":
 		em.Title = "Quest reward: [" + item + "]"
 		em.Description = mdEscape(quest) + " (" + mdEscape(firstNonEmpty(extra, "Dungeon")) + ")"

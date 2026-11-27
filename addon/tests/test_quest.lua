@@ -10,13 +10,7 @@ local function turnIn(q, choice, received)
   for _, l in ipairs(received or {}) do W.Fire("CHAT_MSG_LOOT", "You receive item: " .. l .. ".") end
 end
 
-local function boot(tooltips)
-  local ns = H.Boot()
-  ns.notifiers.quest.TooltipLines = function(l)
-    return tooltips and tooltips[tonumber(l:match("item:(%d+)"))] or { "Some item" }
-  end
-  return ns
-end
+local function boot() return H.Boot() end
 
 H.test("quest: attunement (Drakefire Amulet) wins over every other rule; posted after the item arrives", function()
   local ns = boot()
@@ -57,20 +51,7 @@ H.test("quest: tier 0.5 stage from the title, with the upgraded pieces", functio
   H.contains(ev[1].raw, '"extra":"Lightforge Bracers, Lightforge Belt"')
 end)
 
-H.test("quest: class quest by reward spell or class-restricted item", function()
-  local ns = boot({ [6001] = { "Verigan's Fist", "Classes: Paladin" } })
-  turnIn({ id = 1, title = "The Tome of Divinity", rewards = {}, spell = "Redemption" })
-  local fist = link(6001, "Verigan's Fist", "0070dd")
-  W.items[6001] = { name = "Verigan's Fist", quality = 3 }
-  turnIn({ id = 2, title = "The Test of Righteousness", rewards = { fist } }, nil, { fist })
-  local ev = H.EventsOfType(ns, "quest")
-  H.eq(#ev, 2)
-  H.contains(ev[1].raw, '"sub":"class"')
-  H.contains(ev[1].raw, '"extra":"Redemption"')
-  H.contains(ev[2].raw, '"item":"Verigan\'s Fist"')
-end)
-
-H.test("quest: chosen epic reward; dungeon blue; plain quests do not post", function()
+H.test("quest: chosen epic reward; dungeon blue; plain quests do not post; spells are ignored", function()
   local ns = boot()
   local epic, green = link(7001, "Epic Choice", "a335ee"), link(7002, "Green Choice", "1eff00")
   W.items[7001] = { name = "Epic Choice", quality = 4 }
@@ -81,6 +62,7 @@ H.test("quest: chosen epic reward; dungeon blue; plain quests do not post", func
   turnIn({ id = 4, title = "Into the Depths", rewards = { blue }, tagID = 81, tagName = "Dungeon" }, nil, { blue })
   turnIn({ id = 5, title = "Outdoor Blue", rewards = { blue } }, nil, { blue })            -- blue, not dungeon
   turnIn({ id = 6, title = "Pick Green", choices = { green, epic } }, 1, { green })        -- chose the green
+  turnIn({ id = 11, title = "The Tome of Divinity", rewards = {}, spell = "Redemption" })   -- no class quest rule
   local ev = H.EventsOfType(ns, "quest")
   H.eq(#ev, 2)
   H.contains(ev[1].raw, '"sub":"epic"')

@@ -43,7 +43,7 @@ Settings, state and log live in `~/.config/NAVTOK/`.
 | Need roll | you **win anything on a Need roll**: "Won [Item] (Need 87)" |
 | BoE equipped | you equip a Bind-on-Equip item (blue or better) |
 | Recipe | you learn a recipe/pattern/plan **from an item** (green or better; trainer recipes are not posted) |
-| Quest reward | notable quest turn-ins: **attunements** (Onyxia, Molten Core), **Tier 0.5** upgrade stages, **class quests**, **epic** rewards, blue rewards from **dungeon/raid quests**, and a short allowlist (Carrot on a Stick, ...) |
+| Quest reward | notable quest turn-ins: **attunements** (Onyxia, Molten Core), **Tier 0.5** upgrade stages, **epic** rewards, blue rewards from **dungeon/raid quests**, and a short allowlist (Carrot on a Stick, ...) |
 | Riding | you learn riding (normal mount) or epic riding |
 | Dual spec | you unlock Dual Specialization |
 | Skill | a profession or weapon skill reaches 75 / 150 / 225 / 300 |
@@ -74,7 +74,7 @@ Chat is hidden for the one frame the screenshot is taken, so whispers never end 
 | `/navtok done` | ask "dungeon complete?" for a run you left by dying (no popup appears then) |
 | `/navtok debug` | debug messages |
 | `/navtok probe` | diagnostics for testers (see VERIFY.md) |
-| `/navtok probe quest` | prints quest ID, title, tag, reward IDs, reward spell and class restriction at every quest turn-in (for the data files) |
+| `/navtok probe quest` | prints quest ID, title, tag and reward IDs at every quest turn-in (for the data files) |
 
 Tray menu: **Last post**, **Send test**, **Check for updates**, **Open log**, **Quit**.
 **Check for updates** downloads the newest NAVTOK from GitHub (new final bosses, fixes) and

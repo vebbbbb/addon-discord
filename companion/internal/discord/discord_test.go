@@ -329,7 +329,6 @@ func TestQuestAndUnlockEmbeds(t *testing.T) {
 		{map[string]string{"sub": "attunement", "questId": "6502", "quest": "Drakefire Amulet", "itemId": "16309", "quality": "4", "item": "Drakefire Amulet", "extra": "Onyxia's Lair"}, "quest", "Navtok is attuned to Onyxia's Lair!", "quest attunement"},
 		{map[string]string{"sub": "tier05", "stage": "2", "extra": "Lightforge Bracers"}, "quest", "Upgraded to Tier 0.5 (stage 2/4)", "quest tier05"},
 		{map[string]string{"sub": "tier05", "stage": "4"}, "quest", "Tier 0.5 complete!", "quest tier05"},
-		{map[string]string{"sub": "class", "quest": "The Tome of Divinity", "extra": "Redemption"}, "quest", "Completed class quest The Tome of Divinity", "quest class"},
 		{map[string]string{"sub": "epic", "quest": "Pick One", "item": "Epic Choice", "itemId": "7001", "quality": "4"}, "quest", "Quest reward: [Epic Choice]", "quest epic"},
 		{map[string]string{"sub": "dungeon", "quest": "Into the Depths", "item": "Dungeon Blue", "quality": "3", "extra": "Dungeon"}, "quest", "Quest reward: [Dungeon Blue]", "quest dungeon"},
 		{map[string]string{"sub": "riding", "skill": "Horse Riding", "rank": "75"}, "unlock", "Learned riding!", "riding"},
@@ -345,10 +344,6 @@ func TestQuestAndUnlockEmbeds(t *testing.T) {
 	att := Build(ev("quest", cases[0].data), o).Embeds[0]
 	if att.URL != "https://www.wowhead.com/forever/item=16309" || att.Color != colorAttune {
 		t.Errorf("attunement %+v", att)
-	}
-	cls := Build(ev("quest", map[string]string{"sub": "class", "questId": "1", "quest": "Q", "extra": "Redemption"}), o).Embeds[0]
-	if cls.URL != "https://www.wowhead.com/forever/quest=1" || cls.Description != "→ **Redemption**" {
-		t.Errorf("class %+v", cls)
 	}
 }
 

@@ -168,16 +168,12 @@ Forever's client database defines the legacy challenges as achievements (176 of 
 ## 7e. Quest rewards (`/navtok probe quest`)
 
 Turn the quest probe on with `/navtok probe quest`: every quest turn-in window then prints
-`quest <id> "<title>" tag=<id>/<name> spell=<reward spell>` and one line per reward/choice with
-item ID, quality, name and class restriction. Copy the IDs into `Data/Attunements.lua` /
+`quest <id> "<title>" tag=<id>/<name>` and one line per reward/choice with item ID, quality and
+name. Copy the IDs into `Data/Attunements.lua` /
 `Data/QuestRewards.lua` and set `verified = true`.
 
 - [ ] `GetQuestTagInfo` returns Dungeon/Raid (tag 81/62) for dungeon and raid quests in Forever,
   including the new level 60 dungeons. Note quests that should be tagged but are not.
-- [ ] `GetRewardSpell` works and only flags class quests (note every false positive: profession
-  or general quests that teach a spell would post as "class quest").
-- [ ] The tooltip class-restriction scan ("Classes: Paladin") works on quest reward items
-  (the probe line shows `class=Paladin`).
 - [ ] The Tier 0.5 quest titles match exactly in game ("An Earnest Proposition", "Just
   Compensation", "Anthion's Parting Words", "Saving the Best for Last"); collect the per-class
   quest IDs into `Tier05.questIds`.
