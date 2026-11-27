@@ -41,10 +41,12 @@ Settings, state and log live in `~/.config/NAVTOK/`.
 |---|---|
 | Loot | you loot an epic (or better) item |
 | Need roll | you **win anything on a Need roll**: "Won [Item] (Need 87)" |
+| BoE equipped | you equip a Bind-on-Equip item (blue or better) |
+| Recipe | you learn a recipe/pattern/plan **from an item** (green or better; trainer recipes are not posted) |
 | Skill | a profession or weapon skill reaches 75 / 150 / 225 / 300 |
 | Level | you level up (screenshot catches the level-up glow) |
 | Reputation | you reach Friendly, Honored, Revered or Exalted with a faction |
-| Death | you die (zone, and the killer when it can be told) |
+| Death | you die (zone, and the killer when it can be told); **PvP deaths** show as "Killed by \<player\> (PvP)" in red. Deaths can't be switched off. |
 | Dungeon / raid | you kill a final boss from NAVTOK's list (instant post). Left without the final boss? When you leave (alive) WoW asks *"Did you complete Blackmaw Hold?"*; **Yes** posts it with the screenshot of your last boss kill. Dying and running back never asks. |
 | Rare | you kill a rare or rare-elite mob |
 | Battleground | a battleground ends: win or loss, duration, your kills, deaths and honor |
@@ -52,12 +54,18 @@ Settings, state and log live in `~/.config/NAVTOK/`.
 
 Chat is hidden for the one frame the screenshot is taken, so whispers never end up in Discord.
 
+**Searching the channel:** every post has a small grey line like `Kjell · death`. Search Discord for
+`Kjell death`, `Kjell pvp`, `Kjell need`, `Kjell level` and so on.
+
 ## In-game commands
 
 | Command | |
 |---|---|
-| `/navtok` | status |
-| `/navtok test <type>` | post a fake event (marked TEST). Types: loot, skill, level, reputation, death, dungeon, bg, legacy, rare |
+| `/navtok` | status, what is posted, and the list of commands |
+| `/navtok settings` | window: switch post types on/off, minimum rarity, profession milestones, level interval |
+| `/navtok off <type>` / `on <type>` | e.g. `/navtok off rare` (types: loot, need, equip, recipe, level, skill, reputation, dungeon, bg, rare, legacy) |
+| `/navtok set <name> <value>` | `loot epic`, `need green`, `boe rare`, `recipe green`, `skills 75,150,225,300`, `levels 5` |
+| `/navtok test <type>` | post a fake event (marked TEST). Types: loot, skill, level, reputation, death, dungeon, bg, legacy, rare, equip, recipe |
 | `/navtok position tl\|tr\|bl\|br` | move the barcode to another screen corner (default top-right) |
 | `/navtok chat on\|off` | hide chat in screenshots (default on) |
 | `/navtok done` | ask "dungeon complete?" for a run you left by dying (no popup appears then) |

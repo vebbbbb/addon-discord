@@ -122,7 +122,14 @@ SavedVariables JSON line (sorted keys), produced by `Core.lua` `ns.Emit`:
 | dungeon | encounterId, encounter, instance, bosses, duration, shotSeq | ENCOUNTER_END success: known final boss (`Data.FindFinalBoss`, Forever ids) posts at once. Any other boss kill emits a *candidate* (flag C, `candidate=true`): the companion stores its screenshot (state.json `candidates`, key `<char>#<seq>`) and never posts it. Leaving the instance ALIVE (`char.run`, persisted) with no known final asks via StaticPopup "Did you complete X?"; Yes emits a summary with `shotSeq` = last candidate's seq and the companion posts it with that screenshot. Leaving dead/ghost marks the run `away` (no popup); re-entering continues it; `/navtok done` asks manually | 0.5 s, priority |
 | bg | bg, result (win/loss/draw), duration, kb, hk, deaths, honor | UPDATE_BATTLEFIELD_STATUS/SCORE + GetBattlefieldWinner in a pvp instance; once per instance key (persisted in `char.bg.posted`) | ~1 s, priority |
 | legacy | achievementId, text, group | ACHIEVEMENT_EARNED for an id in `Data.Legacy` (localized name via GetAchievementInfo; single-zone "Explore X" steps only if `legacyZones`); fallback when the event does not exist: CHAT_MSG_SYSTEM matching `legacyPatterns` | 0 |
+| equip | itemId, quality, slot, item | EQUIP_BIND_CONFIRM / AUTOEQUIP_BIND_CONFIRM (BoE bind popup), then PLAYER_EQUIPMENT_CHANGED within 15 s with the same item; quality ≥ `equipMinQuality` (3) | 0.3 s |
+| recipe | itemId, quality, item, learned | hooked UseContainerItem on a Recipe-class item (classID 9), then ERR_LEARN_RECIPE_S/ERR_LEARN_SPELL_S within 10 s (trainer recipes never match); quality ≥ `recipeMinQuality` (2) | 0 |
 | rare | npcId, classification, mobLevel, npc, zone, subzone | rare/rareelite unit (target, mouseover, nameplate) becomes dead and is not tap-denied, or CHAT_MSG_COMBAT_XP_GAIN "X dies..." for a rare seen in the last 120 s; once per GUID | 0 |
+
+Settings (`Options.lua`, `/navtok settings`): `settings.enabled[kind]` switches each kind off
+(`ns.Emit(..., {kind=...})`; need wins use kind `need`); deaths can never be switched off; test
+events ignore the switches. Discord posts carry `content` "-# <char> · <tag>" (discord.SearchTag)
+because Discord search indexes message text, not embeds.
 
 Test events (`/navtok test <type>`) set `test=true`. Discord titles get a `[TEST] ` prefix and
 late posts a ` (late)` suffix.

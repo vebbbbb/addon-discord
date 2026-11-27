@@ -156,6 +156,15 @@ Forever's client database defines the legacy challenges as achievements (176 of 
    note the text; the patterns come from LOOT_ROLL_* GlobalStrings, so they should follow.
 3. Win an item on **Greed**: no need post (an epic still posts as normal loot).
 
+## 7d. BoE equipped, recipes from items, PvP deaths, settings window
+
+- [ ] BoE: equip a blue BoE item -> confirm the bind popup -> "Equipped [Item]" post. If nothing,
+  check the probe for `EQUIP_BIND_CONFIRM` / `AUTOEQUIP_BIND_CONFIRM` and `PLAYER_EQUIPMENT_CHANGED`.
+- [ ] Recipe: use a recipe item from the bags -> "Learned [Recipe: X]" post; learning from a trainer
+  must NOT post. If nothing, note the exact "You have learned ..." chat text.
+- [ ] PvP: die to a player (or in a battleground) -> red "Killed by <player> (PvP)".
+- [ ] `/navtok settings` opens the window; checkboxes, quality buttons and the two text fields work.
+
 ## 8. Physical pixel size / UI scale for pixel-perfect drawing
 
 - [ ] **Result:** ______

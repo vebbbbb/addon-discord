@@ -86,11 +86,13 @@ posted.
 | `S` | skill | skill, rank | skill |
 | `V` | level | zone | zone |
 | `R` | reputation | faction, standing (1..8) | faction |
-| `D` | death | zone, subzone, killer | subzone, killer, zone |
+| `D` | death | zone, subzone, killer, pvp (`1` = killed by a player / in a battleground) | subzone, killer, zone |
 | `K` | dungeon | encounterId, encounter, instance, bosses, duration, shotSeq | instance, encounter |
 | `B` | bg | bg, result (`win`/`loss`/`draw`), duration (s), kb, hk, deaths, honor | bg |
 | `G` | legacy | achievementId, text, group | group, text |
 | `E` | rare | npcId, classification, mobLevel, npc, zone, subzone | subzone, zone, npc |
+| `Q` | equip | itemId, quality, slot, item | item |
+| `P` | recipe | itemId, quality, item, learned | learned, item |
 
 If the payload is longer than 96 bytes, the free-text fields in the right-hand column are
 shortened in that order, never splitting a UTF-8 sequence. The character name is shortened only
