@@ -308,6 +308,9 @@ func Build(e *event.Event, o Options) Message {
 			}
 			em.Color = colorLoss
 		}
+		if l := DeathLine(e); l != "" {
+			milestones = append(milestones, "*"+mdEscape(l)+"*")
+		}
 		if len(milestones) > 0 {
 			em.Description = strings.TrimSpace(em.Description + "\n" + strings.Join(milestones, "\n"))
 		}

@@ -140,6 +140,11 @@ claims `key` ("K:<encounter>", "E:<guid>", "B:<bg key>"); after 1.5 s only the a
 claimant runs fn (solo: immediately). `ns.Group.Done("S:<map>")` tells the group a dungeon summary
 was posted (their popup closes). World PvP kills are shared as "H <victim>". Deaths never use it.
 Death posts carry `deathNo` / `pvpDeathNo` on every 50th death (statistics 60 / 1501, seeded at login).
+Session deaths: `char.session.deaths` (new session only on a real login after >30 min offline,
+`char.lastSeen` heartbeat every 60 s); flavour line at 3/5/7 and every death from 10, never
+between ENCOUNTER_START/END; pools in Data/DeathLines.lua (PLAIN DATA: also parsed by the
+companion), shuffled decks per pool, no line twice in a row; the barcode carries `line` =
+"<pool>:<index>" and the companion renders the text (discord.DeathLine).
 
 Test events (`/navtok test <type>`) set `test=true`. Discord titles get a `[TEST] ` prefix and
 late posts a ` (late)` suffix.

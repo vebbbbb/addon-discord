@@ -205,6 +205,12 @@ name. Copy the IDs into `Data/Attunements.lua` /
 - [ ] `UnitPVPRank("player")` / `GetPVPRankInfo` work and `PLAYER_PVP_RANK_CHANGED` fires on the
   weekly rank update.
 
+## 7h. Session death lines
+
+- [ ] `PLAYER_ENTERING_WORLD` passes isInitialLogin / isReloadingUi in Forever (a /reload must not
+  reset the session count: die 3 times, /reload, die again -> the post says session 4).
+- [ ] A raid wipe (death between ENCOUNTER_START and ENCOUNTER_END) posts the death without a line.
+
 ## 8. Physical pixel size / UI scale for pixel-perfect drawing
 
 - [ ] **Result:** ______

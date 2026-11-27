@@ -67,7 +67,7 @@ var fields = map[string][]string{
 	"skill":      {"skill", "rank"},
 	"level":      {"zone"},
 	"reputation": {"faction", "standing"},
-	"death":      {"zone", "subzone", "killer", "pvp", "deathNo", "pvpDeathNo"},
+	"death":      {"zone", "subzone", "killer", "pvp", "deathNo", "pvpDeathNo", "session", "line"},
 	"dungeon":    {"encounterId", "encounter", "instance", "bosses", "duration", "shotSeq", "group"},
 	"bg":         {"bg", "result", "duration", "kb", "hk", "deaths", "honor", "group"},
 	"legacy":     {"achievementId", "text", "group"},

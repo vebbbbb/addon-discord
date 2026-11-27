@@ -50,7 +50,7 @@ Settings, state and log live in `~/.config/NAVTOK/`.
 | Skill | a profession or weapon skill reaches 75 / 150 / 225 / 300 |
 | Level | you level up (screenshot catches the level-up glow) |
 | Reputation | you reach Friendly, Honored, Revered or Exalted with a faction |
-| Death | you die (zone, and the killer when it can be told); **PvP deaths** show as "Killed by \<player\> (PvP)" in red. Every **50th death** (lifetime) and every **50th death to another player** gets an extra line. Deaths can't be switched off. |
+| Death | you die (zone, and the killer when it can be told); **PvP deaths** show as "Killed by \<player\> (PvP)" in red. Every **50th death** (lifetime) and every **50th death to another player** gets an extra line, and from the 3rd death of a session a **flavour line** ("Kjell died for the 5th time this session, are you okay?"). Lines are in `Data/DeathLines.lua`. Deaths can't be switched off. |
 | Dungeon / raid | you kill a final boss from NAVTOK's list (instant post). Left without the final boss? When you leave (alive) WoW asks *"Did you complete Blackmaw Hold?"*; **Yes** posts it with the screenshot of your last boss kill. Dying and running back never asks. |
 | Rare | you kill a rare or rare-elite mob |
 | Battleground | a battleground ends: win or loss, duration, your kills, deaths and honor |

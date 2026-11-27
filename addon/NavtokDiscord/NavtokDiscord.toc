@@ -13,6 +13,7 @@ Data\Legacy.lua
 Data\Attunements.lua
 Data\QuestRewards.lua
 Data\ClassGear.lua
+Data\DeathLines.lua
 Core.lua
 Group.lua
 Barcode.lua

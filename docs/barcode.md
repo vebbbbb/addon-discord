@@ -86,7 +86,7 @@ posted.
 | `S` | skill | skill, rank | skill |
 | `V` | level | zone | zone |
 | `R` | reputation | faction, standing (1..8) | faction |
-| `D` | death | zone, subzone, killer, pvp (`1` = killed by a player / in a battleground) | subzone, killer, zone |
+| `D` | death | zone, subzone, killer, pvp (`1` = killed by a player / in a battleground), deathNo, pvpDeathNo, session (deaths this session), line (`<pool>:<index>` in Data/DeathLines.lua; the companion renders the text) | subzone, killer, zone |
 | `K` | dungeon | encounterId, encounter, instance, bosses, duration, shotSeq | instance, encounter |
 | `B` | bg | bg, result (`win`/`loss`/`draw`), duration (s), kb, hk, deaths, honor | bg |
 | `G` | legacy | achievementId, text, group | group, text |
