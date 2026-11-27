@@ -6,7 +6,7 @@ local files = {
   "test_json.lua", "test_barcode.lua", "test_screenshot.lua", "test_core.lua",
   "test_loot.lua", "test_skill.lua", "test_level.lua", "test_reputation.lua",
   "test_death.lua", "test_dungeon.lua", "test_bg.lua", "test_legacy.lua", "test_rare.lua",
-  "test_commands.lua", "test_probe.lua",
+  "test_commands.lua", "test_probe.lua", "test_options.lua", "test_equip_recipe.lua",
 }
 for _, f in ipairs(files) do dofile(dir .. "/" .. f) end
 

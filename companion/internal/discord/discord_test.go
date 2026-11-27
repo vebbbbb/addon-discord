@@ -295,6 +295,30 @@ func (r rewrite) RoundTrip(req *http.Request) (*http.Response, error) {
 	return http.DefaultTransport.RoundTrip(nr)
 }
 
+func TestNewTypesAndSearchTag(t *testing.T) {
+	o := Options{WowheadBase: "https://www.wowhead.com/forever"}
+	pvp := Build(ev("death", map[string]string{"zone": "Arathi Highlands", "killer": "Gankster", "pvp": "1"}), o)
+	if pvp.Embeds[0].Title != "Killed by Gankster (PvP)" || pvp.Embeds[0].Color != colorLoss || pvp.Content != "-# Navtok · death pvp" {
+		t.Fatalf("pvp %+v %q", pvp.Embeds[0], pvp.Content)
+	}
+	mob := Build(ev("death", map[string]string{"zone": "Badlands", "killer": "Crag Coyote"}), o)
+	if mob.Embeds[0].Title != "Died in Badlands" || mob.Content != "-# Navtok · death" {
+		t.Fatalf("death %+v %q", mob.Embeds[0], mob.Content)
+	}
+	eq := Build(ev("equip", map[string]string{"itemId": "12640", "quality": "4", "item": "Lionheart Helm"}), o).Embeds[0]
+	if eq.Title != "Equipped [Lionheart Helm]" || eq.Color != 0xA335EE || eq.URL != "https://www.wowhead.com/forever/item=12640" {
+		t.Fatalf("equip %+v", eq)
+	}
+	r := Build(ev("recipe", map[string]string{"itemId": "9", "quality": "2", "item": "Recipe: Elixir of Giants", "learned": "Elixir of Giants"}), o).Embeds[0]
+	if r.Title != "Learned [Recipe: Elixir of Giants]" || r.Description != "Can now make **Elixir of Giants**" {
+		t.Fatalf("recipe %+v", r)
+	}
+	need := Build(ev("loot", map[string]string{"item": "X", "roll": "need"}), o)
+	if need.Content != "-# Navtok · need loot" {
+		t.Fatal(need.Content)
+	}
+}
+
 func TestNeedWinEmbed(t *testing.T) {
 	e := ev("loot", map[string]string{"itemId": "2000", "quality": "2", "count": "1", "item": "Green Boots", "roll": "need", "rollValue": "87"})
 	em := Build(e, Options{WowheadBase: "https://www.wowhead.com/forever"}).Embeds[0]

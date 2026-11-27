@@ -23,4 +23,7 @@ Notifiers\Dungeon.lua
 Notifiers\Battleground.lua
 Notifiers\Legacy.lua
 Notifiers\Rare.lua
+Notifiers\Equip.lua
+Notifiers\Recipe.lua
+Options.lua
 Commands.lua

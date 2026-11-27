@@ -28,7 +28,8 @@ function C.Status()
   if ns.lastEvent then
     ns.Print(("last event: %s at %s"):format(ns.lastEvent.type, date and date("%H:%M:%S", ns.lastEvent.ts) or ns.lastEvent.ts))
   end
-  ns.Print("commands: test <type> | position <tl|tr|bl|br> | chat on|off | mode screenshot|band | done | debug | probe [on|off|shot|clear]")
+  for _, line in ipairs(ns.Options.Summary()) do ns.Print(line) end
+  ns.Print("commands: settings | on|off <type> | set <name> <value> | test <type> | position <tl|tr|bl|br> | chat on|off | done | debug | probe")
 end
 
 function C.Test(etype)
@@ -70,6 +71,20 @@ function C.Handle(msg)
     if rest ~= "screenshot" and rest ~= "band" then ns.Print("usage: /navtok mode screenshot|band") return end
     s.mode = rest
     ns.Print("mode: " .. rest .. (rest == "band" and " (set plan_b_band_capture=true in the companion config)" or ""))
+  elseif cmd == "settings" or cmd == "options" or cmd == "config" then
+    ns.Options.Open()
+  elseif cmd == "on" or cmd == "off" then
+    if rest == "death" then ns.Print("deaths are always posted") return end
+    if not ns.Options.SetEnabled(rest, cmd == "on") then
+      local names = {}
+      for _, k in ipairs(ns.Options.KINDS) do names[#names + 1] = k[1] end
+      ns.Print("usage: /navtok " .. cmd .. " <" .. table.concat(names, "|") .. ">")
+      return
+    end
+    ns.Print(rest .. " posts " .. (cmd == "on" and "|cff00ff00on|r" or "|cffff0000off|r"))
+  elseif cmd == "set" then
+    local name, value = rest:match("^(%S+)%s*(.-)$")
+    ns.Print(ns.Options.Set(name, value))
   elseif cmd == "done" then
     ns.notifiers.dungeon:Done()
   elseif cmd == "debug" then

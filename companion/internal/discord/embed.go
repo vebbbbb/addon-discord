@@ -125,6 +125,21 @@ func fmtDuration(sec int) string {
 	return fmt.Sprintf("%dm %02ds", int(d.Minutes()), int(d.Seconds())%60)
 }
 
+// SearchTag is the searchable word for a post type ("death", "pvp", "need", ...).
+func SearchTag(e *event.Event) string {
+	switch {
+	case e.Type == "test":
+		return "test"
+	case e.Type == "death" && e.Get("pvp") == "1":
+		return "death pvp"
+	case e.Type == "loot" && e.Get("roll") == "need":
+		return "need loot"
+	case e.Type == "equip":
+		return "boe equip"
+	}
+	return e.Type
+}
+
 // Summary is a one-line description (tray "Last post", log).
 func Summary(e *event.Event) string {
 	m := Build(e, Options{})
@@ -203,6 +218,36 @@ func Build(e *event.Event, o Options) Message {
 			em.Description = "Killed by **" + mdEscape(k) + "**"
 		}
 		em.Color = classColor(e)
+		if e.Get("pvp") == "1" {
+			if k := e.Get("killer"); k != "" {
+				em.Title = "Killed by " + k + " (PvP)"
+				em.Description = "in " + mdEscape(where)
+			} else {
+				em.Title += " (PvP)"
+			}
+			em.Color = colorLoss
+		}
+	case "equip":
+		item := e.Get("item")
+		em.Title = "Equipped [" + item + "]"
+		em.Description = "Bind on Equip"
+		if c, ok := QualityColors[e.Int("quality")]; ok {
+			em.Color = c
+		}
+		if id := e.Get("itemId"); id != "" && id != "0" && wowhead != "" {
+			em.URL = wowhead + "/item=" + id
+		}
+	case "recipe":
+		em.Title = "Learned [" + e.Get("item") + "]"
+		if l := e.Get("learned"); l != "" {
+			em.Description = "Can now make **" + mdEscape(l) + "**"
+		}
+		if c, ok := QualityColors[e.Int("quality")]; ok {
+			em.Color = c
+		}
+		if id := e.Get("itemId"); id != "" && id != "0" && wowhead != "" {
+			em.URL = wowhead + "/item=" + id
+		}
 	case "dungeon":
 		boss, inst := e.Get("encounter"), e.Get("instance")
 		n := e.Int("bosses")
@@ -318,7 +363,10 @@ func Build(e *event.Event, o Options) Message {
 	em.Author = &EmbedAuthor{Name: author}
 	em.Timestamp = time.Unix(e.TS, 0).UTC().Format(time.RFC3339)
 	em.Footer = &EmbedFooter{Text: "NAVTOK DISCORD"}
-	msg := Message{Embeds: []Embed{em}, AllowedMentions: &AllowedMentions{Parse: []string{}}}
+	// A small grey line of plain text: Discord search reliably indexes message text (not embeds),
+	// so "Kjell death" or "Kjell need" finds the posts.
+	msg := Message{Content: "-# " + e.Char + " · " + SearchTag(e), Embeds: []Embed{em},
+		AllowedMentions: &AllowedMentions{Parse: []string{}}}
 	if o.HasImage {
 		msg.Embeds[0].Image = &EmbedImage{URL: "attachment://" + ImageName}
 		msg.Attachments = []Attachment{{ID: 0, Filename: ImageName}}

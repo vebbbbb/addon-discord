@@ -39,6 +39,8 @@ func main() {
 		"dungeon":    {"encounterId": "0", "encounter": "Edwin VanCleef", "instance": "The Deadmines"},
 		"bg":         {"bg": "Warsong Gulch", "result": "win", "duration": "1234", "kb": "7", "hk": "31", "deaths": "2", "honor": "412"},
 		"legacy":     {"achievementId": "62382", "text": "Explorer", "group": "Adventure"},
+		"equip":      {"itemId": "12640", "quality": "4", "slot": "1", "item": "Lionheart Helm"},
+		"recipe":     {"itemId": "13518", "quality": "2", "item": "Recipe: Flask of Petrification", "learned": "Flask of Petrification"},
 		"rare":       {"npcId": "522", "classification": "rareelite", "mobLevel": "35", "npc": "Mor'Ladim", "zone": "Duskwood", "subzone": "Tranquil Gardens Cemetery"},
 	}
 	data, ok := samples[*typ]

@@ -29,6 +29,6 @@ H.test("commands: test <type> works for every notifier and marks test", function
   for _, t in ipairs(ns.notifierOrder) do H.ok(seen[t], "test " .. t) end
   -- every test event must encode into a barcode
   for _, line in ipairs(ns.char.events) do H.ok(#line > 0) end
-  W.Advance(20)
+  W.Advance(2.2 * #ns.notifierOrder + 2)
   H.eq(#W.screenshots, #ns.notifierOrder, "every test event screenshotted")
 end)

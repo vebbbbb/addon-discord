@@ -15,7 +15,7 @@ B.SEP = "\31"            -- ASCII unit separator between payload fields
 
 B.TYPE_CODES = {
   loot = "L", skill = "S", level = "V", reputation = "R",
-  death = "D", dungeon = "K", bg = "B", legacy = "G", rare = "E",
+  death = "D", dungeon = "K", bg = "B", legacy = "G", rare = "E", equip = "Q", recipe = "P",
 }
 
 -- Type specific payload fields, in order. Shared with the companion (internal/event/payload.go).
@@ -24,11 +24,13 @@ B.FIELDS = {
   skill      = { "skill", "rank" },
   level      = { "zone" },
   reputation = { "faction", "standing" },
-  death      = { "zone", "subzone", "killer" },
+  death      = { "zone", "subzone", "killer", "pvp" },
   dungeon    = { "encounterId", "encounter", "instance", "bosses", "duration", "shotSeq" },
   bg         = { "bg", "result", "duration", "kb", "hk", "deaths", "honor" },
   legacy     = { "achievementId", "text", "group" },
   rare       = { "npcId", "classification", "mobLevel", "npc", "zone", "subzone" },
+  equip      = { "itemId", "quality", "slot", "item" },
+  recipe     = { "itemId", "quality", "item", "learned" },
 }
 
 -- Free-text fields that may be shortened (first entry is shortened first) to fit MAX_PAYLOAD.
@@ -36,6 +38,7 @@ B.TRIM_ORDER = {
   loot = { "item" }, skill = { "skill" }, level = { "zone" }, reputation = { "faction" },
   death = { "subzone", "killer", "zone" }, dungeon = { "instance", "encounter" },
   bg = { "bg" }, legacy = { "group", "text" }, rare = { "subzone", "zone", "npc" },
+  equip = { "item" }, recipe = { "learned", "item" },
 }
 
 local band, bor, bxor, lshift, rshift = bit.band, bit.bor, bit.bxor, bit.lshift, bit.rshift

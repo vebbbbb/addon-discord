@@ -5,6 +5,9 @@ local N = ns.NewNotifier("level")
 N.DELAY = 0.5
 
 function N:Handle(newLevel)
+  local s = ns.settings or ns.DEFAULTS
+  local every, lvl = math.max(1, tonumber(s.levelEvery) or 1), tonumber(newLevel) or 0
+  if lvl % every ~= 0 and lvl < (tonumber(s.maxLevel) or 60) then return end
   ns.Emit("level", { level = tonumber(newLevel), zone = GetRealZoneText and GetRealZoneText() or "" },
     { delay = self.DELAY, priority = true })
 end

@@ -131,7 +131,7 @@ function N:Won(link)
     itemId = id, quality = quality or 1, count = 1,
     item = name or link:match("%[(.-)%]") or ("item " .. id),
     roll = "need", rollValue = self.rollValues[id],
-  })
+  }, { kind = "need" })
   self.rollValues[id] = nil
 end
 

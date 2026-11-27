@@ -1,0 +1,63 @@
+local function run(cmd) SlashCmdList["NAVTOK"](cmd) end
+
+H.test("options: post types can be switched off; deaths cannot", function()
+  local ns = H.Boot()
+  run("off level")
+  W.Fire("PLAYER_LEVEL_UP", 21)
+  H.eq(#H.EventsOfType(ns, "level"), 0, "level off")
+  run("off death")
+  H.contains(W.chat[#W.chat], "always posted")
+  W.Fire("PLAYER_DEAD")
+  H.eq(#H.EventsOfType(ns, "death"), 1, "deaths always post")
+  run("on level")
+  W.Fire("PLAYER_LEVEL_UP", 22)
+  H.eq(#H.EventsOfType(ns, "level"), 1)
+  -- test events ignore the switches
+  run("off rare")
+  run("test rare")
+  H.eq(#H.EventsOfType(ns, "rare"), 1)
+  -- settings survive a reload
+  local ns2 = H.Boot({ db = NavtokDiscordDB })
+  H.ok(not ns2.IsEnabled("rare") and ns2.IsEnabled("loot") and ns2.IsEnabled("death"))
+end)
+
+H.test("options: need wins switch separately from loot", function()
+  local ns = H.Boot()
+  run("off need")
+  local boots = "|cff1eff00|Hitem:2000::::::::60:::::|h[Green Boots]|h|r"
+  W.items[2000] = { name = "Green Boots", quality = 2 }
+  W.Fire("CHAT_MSG_LOOT", "You have selected Need for: " .. boots)
+  W.Fire("CHAT_MSG_LOOT", "You won: " .. boots)
+  H.eq(#H.EventsOfType(ns, "loot"), 0)
+end)
+
+H.test("options: set qualities, profession milestones and level interval", function()
+  local ns = H.Boot()
+  run("set loot rare")
+  H.eq(ns.settings.lootMinQuality, 3)
+  run("set need green")
+  H.eq(ns.settings.needMinQuality, 2)
+  run("set boe 4")
+  H.eq(ns.settings.equipMinQuality, 4)
+  run("set skills 50, 100,150 300")
+  H.eq(table.concat(ns.settings.skillMilestones, ","), "50,100,150,300")
+  W.Fire("CHAT_MSG_SKILL", "Your skill in Mining has increased to 100.")
+  H.eq(#H.EventsOfType(ns, "skill"), 1)
+  run("set levels 5")
+  for lvl = 21, 30 do W.Fire("PLAYER_LEVEL_UP", lvl) end
+  W.Fire("PLAYER_LEVEL_UP", 60)
+  local lv = H.EventsOfType(ns, "level")
+  H.eq(#lv, 3, "25, 30 and max level 60")
+  run("set loot banana")
+  H.contains(W.chat[#W.chat], "quality:")
+end)
+
+H.test("options: the settings window opens and reflects settings", function()
+  local ns = H.Boot()
+  run("off bg")
+  run("settings")
+  local f = _G.NavtokDiscordOptions
+  H.ok(f and f:IsShown(), "window shown")
+  run("")
+  H.contains(table.concat(W.chat, "\n"), "off: bg")
+end)

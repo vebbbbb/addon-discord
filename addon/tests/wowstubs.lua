@@ -52,7 +52,13 @@ end
 -- Frames and textures
 -------------------------------------------------------------------------------
 local FrameMT = {}
-FrameMT.__index = FrameMT
+-- unknown widget methods (UI templates: SetText, SetChecked, EnableMouse, ...) are no-ops
+FrameMT.__index = function(_, k)
+  local v = rawget(FrameMT, k)
+  if v ~= nil then return v end
+  -- only method-like names (SetText, EnableMouse...); fields such as parent/text stay nil
+  if type(k) == "string" and k:match("^[A-Z][a-z]+[A-Z]") then return function() end end
+end
 
 function W.NewFrame(ftype, name, parent)
   local f = setmetatable({ ftype = ftype, name = name, parent = parent, shown = true, alpha = 1, scale = 1,
@@ -84,6 +90,11 @@ function FrameMT:SetAllPoints() end
 function FrameMT:SetFrameStrata(s) self.strata = s end
 function FrameMT:SetFrameLevel(l) self.level = l end
 function FrameMT:SetClampedToScreen() end
+function FrameMT:CreateFontString()
+  local fs = W.NewFrame("FontString")
+  fs.SetText = function(self, t) self.text = t end
+  return fs
+end
 function FrameMT:CreateTexture()
   local t = W.NewFrame("Texture")
   t.SetColorTexture = function(tex, r, g, b, a) tex.color = { r, g, b, a } end
@@ -229,7 +240,21 @@ function IsEquippableItem(link)
   return (it.equipLoc or "INVTYPE_CHEST") ~= ""
 end
 W.hooks = {}
-function hooksecurefunc(name, fn) W.hooks[name] = fn end
+function hooksecurefunc(a, b, c)
+  if type(a) == "table" then W.hooks["C_Container." .. b] = c else W.hooks[a] = b end
+end
+W.bags = {}          -- [bag][slot] = link
+W.equipped = {}      -- [slot] = link
+W.cursor = nil       -- link on the cursor
+function UseContainerItem(bag, slot) if W.hooks.UseContainerItem then W.hooks.UseContainerItem(bag, slot) end end
+function GetContainerItemLink(bag, slot) return W.bags[bag] and W.bags[bag][slot] end
+function GetInventoryItemLink(_, slot) return W.equipped[slot] end
+function GetCursorInfo() if W.cursor then return "item", tonumber(W.cursor:match("item:(%d+)")), W.cursor end end
+function GetItemInfoInstant(link)
+  local id = tonumber(tostring(link):match("item:(%d+)")) or tonumber(link)
+  local it = W.items[id]
+  return id, nil, nil, nil, nil, it and it.classID or 4
+end
 W.rollItems = {}
 function RollOnLoot(rollID, rollType) if W.hooks.RollOnLoot then W.hooks.RollOnLoot(rollID, rollType) end end
 function GetLootRollItemLink(rollID) return W.rollItems[rollID] end
@@ -262,6 +287,8 @@ LOOT_ITEM_SELF = "You receive loot: %s."
 LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %sx%d."
 SKILL_RANK_UP = "Your skill in %s has increased to %d."
 LOOT_ROLL_YOU_WON = "You won: %s"
+ERR_LEARN_RECIPE_S = "You have learned how to create a new item: %s."
+ERR_LEARN_SPELL_S = "You have learned a new spell: %s."
 LOOT_ROLL_NEED_SELF = "You have selected Need for: %s"
 LOOT_ROLL_ROLLED_NEED = "Need Roll - %d for %s by %s"
 YOU = "You"

@@ -40,6 +40,7 @@ end
 -- Asks "was <instance> complete?" for a run left without its final boss.
 function N:Ask(run)
   if not run or run.done or run.posted or (run.bosses or 0) == 0 or not run.lastSeq then return end
+  if not ns.IsEnabled("dungeon") then return end
   if not (StaticPopupDialogs and StaticPopup_Show) then
     ns.Print(run.instance .. ": " .. run.bosses .. " bosses. Type /navtok done to post it.")
     N.pending = run
