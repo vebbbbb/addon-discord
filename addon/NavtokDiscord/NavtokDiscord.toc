@@ -10,6 +10,8 @@ Json.lua
 Data\Classes.lua
 Data\Dungeons.lua
 Data\Legacy.lua
+Data\Attunements.lua
+Data\QuestRewards.lua
 Core.lua
 Barcode.lua
 Screenshot.lua
@@ -25,5 +27,7 @@ Notifiers\Legacy.lua
 Notifiers\Rare.lua
 Notifiers\Equip.lua
 Notifiers\Recipe.lua
+Notifiers\Quest.lua
+Notifiers\Unlock.lua
 Options.lua
 Commands.lua

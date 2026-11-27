@@ -93,6 +93,8 @@ posted.
 | `E` | rare | npcId, classification, mobLevel, npc, zone, subzone | subzone, zone, npc |
 | `Q` | equip | itemId, quality, slot, item | item |
 | `P` | recipe | itemId, quality, item, learned | learned, item |
+| `U` | quest | sub (attunement/tier05/class/epic/dungeon/allowlist), questId, itemId, quality, stage, item, extra, quest | quest, extra, item |
+| `M` | unlock | sub (riding/epicriding/dualspec), rank, skill | skill |
 
 If the payload is longer than 96 bytes, the free-text fields in the right-hand column are
 shortened in that order, never splitting a UTF-8 sequence. The character name is shortened only

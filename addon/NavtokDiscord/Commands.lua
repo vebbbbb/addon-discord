@@ -93,6 +93,10 @@ function C.Handle(msg)
   elseif cmd == "probe" then
     if rest == "shot" then
       ns.Probe.ShotTest()
+    elseif rest == "quest" or rest == "quest on" or rest == "quest off" then
+      ns.db.probeQuest = (rest == "quest on") or (rest == "quest" and not ns.db.probeQuest)
+      ns.Print("quest probe " .. (ns.db.probeQuest and "|cff00ff00on|r: every quest turn-in window prints its IDs"
+        or "|cffff0000off|r"))
     elseif rest == "clear" then
       ns.db.probe = {}
       ns.Print("probe buffer cleared")

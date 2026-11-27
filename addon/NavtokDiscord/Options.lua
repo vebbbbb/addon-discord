@@ -11,6 +11,7 @@ O.KINDS = {
   { "recipe", "Recipes learned" }, { "level", "Level up" }, { "skill", "Profession milestones" },
   { "reputation", "Reputation" }, { "dungeon", "Dungeon / raid clears" }, { "bg", "Battlegrounds" },
   { "rare", "Rare kills" }, { "legacy", "Legacy challenges" },
+  { "quest", "Quest rewards" }, { "riding", "Riding skill" }, { "dualspec", "Dual spec" },
 }
 O.QUALITY = { [0] = "Poor", "Common", "Uncommon", "Rare", "Epic", "Legendary" }
 O.QUALITY_SETTINGS = {
@@ -96,7 +97,7 @@ end
 
 local function build()
   local f = CreateFrame("Frame", "NavtokDiscordOptions", UIParent)
-  f:SetSize(380, 470)
+  f:SetSize(380, 510)
   f:SetPoint("CENTER")
   f:SetFrameStrata("DIALOG")
   f:EnableMouse(true)

@@ -20,6 +20,7 @@ end
 function N:Handle(msg)
   local skill, rank = self:Parse(msg or "")
   if not skill or not isMilestone(rank) then return end
+  if ns.notifiers.unlock and ns.notifiers.unlock.IsRiding(skill) then return end -- posted as riding
   local key = skill .. ":" .. rank
   if self.seen[key] then return end
   self.seen[key] = true

@@ -319,6 +319,39 @@ func TestNewTypesAndSearchTag(t *testing.T) {
 	}
 }
 
+func TestQuestAndUnlockEmbeds(t *testing.T) {
+	o := Options{WowheadBase: "https://www.wowhead.com/forever"}
+	cases := []struct {
+		data       map[string]string
+		typ, title string
+		tag        string
+	}{
+		{map[string]string{"sub": "attunement", "questId": "6502", "quest": "Drakefire Amulet", "itemId": "16309", "quality": "4", "item": "Drakefire Amulet", "extra": "Onyxia's Lair"}, "quest", "Navtok is attuned to Onyxia's Lair!", "quest attunement"},
+		{map[string]string{"sub": "tier05", "stage": "2", "extra": "Lightforge Bracers"}, "quest", "Upgraded to Tier 0.5 (stage 2/4)", "quest tier05"},
+		{map[string]string{"sub": "tier05", "stage": "4"}, "quest", "Tier 0.5 complete!", "quest tier05"},
+		{map[string]string{"sub": "class", "quest": "The Tome of Divinity", "extra": "Redemption"}, "quest", "Completed class quest The Tome of Divinity", "quest class"},
+		{map[string]string{"sub": "epic", "quest": "Pick One", "item": "Epic Choice", "itemId": "7001", "quality": "4"}, "quest", "Quest reward: [Epic Choice]", "quest epic"},
+		{map[string]string{"sub": "dungeon", "quest": "Into the Depths", "item": "Dungeon Blue", "quality": "3", "extra": "Dungeon"}, "quest", "Quest reward: [Dungeon Blue]", "quest dungeon"},
+		{map[string]string{"sub": "riding", "skill": "Horse Riding", "rank": "75"}, "unlock", "Learned riding!", "riding"},
+		{map[string]string{"sub": "epicriding", "skill": "Horse Riding", "rank": "150"}, "unlock", "Learned epic riding!", "riding epic"},
+		{map[string]string{"sub": "dualspec"}, "unlock", "Unlocked Dual Specialization", "dualspec"},
+	}
+	for _, c := range cases {
+		m := Build(ev(c.typ, c.data), o)
+		if m.Embeds[0].Title != c.title || m.Content != "-# Navtok · "+c.tag {
+			t.Errorf("%v: %q %q", c.data["sub"], m.Embeds[0].Title, m.Content)
+		}
+	}
+	att := Build(ev("quest", cases[0].data), o).Embeds[0]
+	if att.URL != "https://www.wowhead.com/forever/item=16309" || att.Color != colorAttune {
+		t.Errorf("attunement %+v", att)
+	}
+	cls := Build(ev("quest", map[string]string{"sub": "class", "questId": "1", "quest": "Q", "extra": "Redemption"}), o).Embeds[0]
+	if cls.URL != "https://www.wowhead.com/forever/quest=1" || cls.Description != "→ **Redemption**" {
+		t.Errorf("class %+v", cls)
+	}
+}
+
 func TestNeedWinEmbed(t *testing.T) {
 	e := ev("loot", map[string]string{"itemId": "2000", "quality": "2", "count": "1", "item": "Green Boots", "roll": "need", "rollValue": "87"})
 	em := Build(e, Options{WowheadBase: "https://www.wowhead.com/forever"}).Embeds[0]

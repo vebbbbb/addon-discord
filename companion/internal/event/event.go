@@ -54,12 +54,12 @@ func (e *Event) Int(k string) int {
 }
 
 // Types lists the known event types in display order.
-var Types = []string{"loot", "skill", "level", "reputation", "death", "dungeon", "bg", "legacy", "rare", "equip", "recipe"}
+var Types = []string{"loot", "skill", "level", "reputation", "death", "dungeon", "bg", "legacy", "rare", "equip", "recipe", "quest", "unlock"}
 
 // typeCodes and fields mirror Barcode.lua (TYPE_CODES / FIELDS).
 var typeCodes = map[string]string{
 	"L": "loot", "S": "skill", "V": "level", "R": "reputation",
-	"D": "death", "K": "dungeon", "B": "bg", "G": "legacy", "E": "rare", "Q": "equip", "P": "recipe",
+	"D": "death", "K": "dungeon", "B": "bg", "G": "legacy", "E": "rare", "Q": "equip", "P": "recipe", "U": "quest", "M": "unlock",
 }
 
 var fields = map[string][]string{
@@ -74,6 +74,8 @@ var fields = map[string][]string{
 	"rare":       {"npcId", "classification", "mobLevel", "npc", "zone", "subzone"},
 	"equip":      {"itemId", "quality", "slot", "item"},
 	"recipe":     {"itemId", "quality", "item", "learned"},
+	"quest":      {"sub", "questId", "itemId", "quality", "stage", "item", "extra", "quest"},
+	"unlock":     {"sub", "rank", "skill"},
 }
 
 // Fields returns the ordered payload fields of a type.

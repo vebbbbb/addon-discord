@@ -43,6 +43,9 @@ Settings, state and log live in `~/.config/NAVTOK/`.
 | Need roll | you **win anything on a Need roll**: "Won [Item] (Need 87)" |
 | BoE equipped | you equip a Bind-on-Equip item (blue or better) |
 | Recipe | you learn a recipe/pattern/plan **from an item** (green or better; trainer recipes are not posted) |
+| Quest reward | notable quest turn-ins: **attunements** (Onyxia, Molten Core), **Tier 0.5** upgrade stages, **class quests**, **epic** rewards, blue rewards from **dungeon/raid quests**, and a short allowlist (Carrot on a Stick, ...) |
+| Riding | you learn riding (normal mount) or epic riding |
+| Dual spec | you unlock Dual Specialization |
 | Skill | a profession or weapon skill reaches 75 / 150 / 225 / 300 |
 | Level | you level up (screenshot catches the level-up glow) |
 | Reputation | you reach Friendly, Honored, Revered or Exalted with a faction |
@@ -63,7 +66,7 @@ Chat is hidden for the one frame the screenshot is taken, so whispers never end 
 |---|---|
 | `/navtok` | status, what is posted, and the list of commands |
 | `/navtok settings` | window: switch post types on/off, minimum rarity, profession milestones, level interval |
-| `/navtok off <type>` / `on <type>` | e.g. `/navtok off rare` (types: loot, need, equip, recipe, level, skill, reputation, dungeon, bg, rare, legacy) |
+| `/navtok off <type>` / `on <type>` | e.g. `/navtok off rare` (types: loot, need, equip, recipe, level, skill, reputation, dungeon, bg, rare, legacy, quest, riding, dualspec) |
 | `/navtok set <name> <value>` | `loot epic`, `need green`, `boe rare`, `recipe green`, `skills 75,150,225,300`, `levels 5` |
 | `/navtok test <type>` | post a fake event (marked TEST). Types: loot, skill, level, reputation, death, dungeon, bg, legacy, rare, equip, recipe |
 | `/navtok position tl\|tr\|bl\|br` | move the barcode to another screen corner (default top-right) |
@@ -71,6 +74,7 @@ Chat is hidden for the one frame the screenshot is taken, so whispers never end 
 | `/navtok done` | ask "dungeon complete?" for a run you left by dying (no popup appears then) |
 | `/navtok debug` | debug messages |
 | `/navtok probe` | diagnostics for testers (see VERIFY.md) |
+| `/navtok probe quest` | prints quest ID, title, tag, reward IDs, reward spell and class restriction at every quest turn-in (for the data files) |
 
 Tray menu: **Last post**, **Send test**, **Check for updates**, **Open log**, **Quit**.
 **Check for updates** downloads the newest NAVTOK from GitHub (new final bosses, fixes) and

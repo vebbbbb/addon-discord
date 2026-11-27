@@ -22,6 +22,9 @@ function W.Reset()
   W.categories = {}               -- category id -> { title, parent }
   W.instance = nil                -- { name, type ("party"/"raid"), mapId }
   W.popups = {}                   -- StaticPopup_Show calls: { which, arg1, data }
+  W.quest = nil                   -- { id, title, rewards = {links}, choices = {links}, spell, tagID, tagName }
+  W.skills = {}                   -- list of { name, rank, header }
+  W.talentGroups = 1
   StaticPopupDialogs = {}
   W.items = {}                    -- link or id -> { name, quality } ; missing = uncached
   W.factions = {}                 -- list of { name, standingID, isHeader, hasRep, factionID }
@@ -215,6 +218,21 @@ function W.ClickPopup(button)
   local def = StaticPopupDialogs[d.which]
   if button == "accept" then def.OnAccept(d, d.data) else def.OnCancel(d, d.data) end
 end
+function GetQuestID() return W.quest and W.quest.id end
+function GetTitleText() return W.quest and W.quest.title end
+function GetNumQuestRewards() return W.quest and #(W.quest.rewards or {}) or 0 end
+function GetNumQuestChoices() return W.quest and #(W.quest.choices or {}) or 0 end
+function GetQuestItemLink(kind, i)
+  local q = W.quest
+  if not q then return nil end
+  return (kind == "reward" and q.rewards or q.choices or {})[i]
+end
+function GetRewardSpell() if W.quest and W.quest.spell then return "Interface\\Icons\\x", W.quest.spell end end
+function GetQuestTagInfo() if W.quest then return W.quest.tagID, W.quest.tagName end end
+function GetQuestReward(choice) if W.hooks.GetQuestReward then W.hooks.GetQuestReward(choice) end end
+function GetNumSkillLines() return #W.skills end
+function GetSkillLineInfo(i) local s = W.skills[i] return s.name, s.header or false, true, s.rank end
+function GetNumTalentGroups() return W.talentGroups end
 function GetAchievementCategory(id) return W.achievementCategory[id] or -1 end
 function GetCategoryInfo(cat) local c = W.categories[cat] if c then return c.title, c.parent end end
 
@@ -287,6 +305,9 @@ LOOT_ITEM_SELF = "You receive loot: %s."
 LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %sx%d."
 SKILL_RANK_UP = "Your skill in %s has increased to %d."
 LOOT_ROLL_YOU_WON = "You won: %s"
+LOOT_ITEM_PUSHED_SELF = "You receive item: %s."
+LOOT_ITEM_PUSHED_SELF_MULTIPLE = "You receive item: %sx%d."
+ITEM_CLASSES_ALLOWED = "Classes: %s"
 ERR_LEARN_RECIPE_S = "You have learned how to create a new item: %s."
 ERR_LEARN_SPELL_S = "You have learned a new spell: %s."
 LOOT_ROLL_NEED_SELF = "You have selected Need for: %s"

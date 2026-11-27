@@ -165,6 +165,37 @@ Forever's client database defines the legacy challenges as achievements (176 of 
 - [ ] PvP: die to a player (or in a battleground) -> red "Killed by <player> (PvP)".
 - [ ] `/navtok settings` opens the window; checkboxes, quality buttons and the two text fields work.
 
+## 7e. Quest rewards (`/navtok probe quest`)
+
+Turn the quest probe on with `/navtok probe quest`: every quest turn-in window then prints
+`quest <id> "<title>" tag=<id>/<name> spell=<reward spell>` and one line per reward/choice with
+item ID, quality, name and class restriction. Copy the IDs into `Data/Attunements.lua` /
+`Data/QuestRewards.lua` and set `verified = true`.
+
+- [ ] `GetQuestTagInfo` returns Dungeon/Raid (tag 81/62) for dungeon and raid quests in Forever,
+  including the new level 60 dungeons. Note quests that should be tagged but are not.
+- [ ] `GetRewardSpell` works and only flags class quests (note every false positive: profession
+  or general quests that teach a spell would post as "class quest").
+- [ ] The tooltip class-restriction scan ("Classes: Paladin") works on quest reward items
+  (the probe line shows `class=Paladin`).
+- [ ] The Tier 0.5 quest titles match exactly in game ("An Earnest Proposition", "Just
+  Compensation", "Anthion's Parting Words", "Saving the Best for Last"); collect the per-class
+  quest IDs into `Tier05.questIds`.
+- [ ] Drakefire Amulet item ID in Forever (16309 assumed) and the Onyxia / Molten Core
+  attunement quest IDs (6502 / 6602 / 7848 assumed).
+- [ ] Quest reward items arrive as "You receive item: X." (LOOT_ITEM_PUSHED_SELF). If not, the
+  post still goes out 5 s after QUEST_TURNED_IN - note the real message.
+- [ ] `QUEST_TURNED_IN` exists (probe `unknown events` line); without it the post is triggered
+  by the `GetQuestReward` hook.
+
+## 7f. Riding and dual spec
+
+- [ ] Learn riding (75) and epic riding (150): one post each. Note the skill's exact name in the
+  skill list (per-race "Horse Riding"... or one "Riding" skill).
+- [ ] Buy dual spec: one "Unlocked Dual Specialization" post. If nothing: does
+  `GetNumTalentGroups()` exist (`/run print(GetNumTalentGroups and GetNumTalentGroups())`)?
+  Note the system message shown when it is learned.
+
 ## 8. Physical pixel size / UI scale for pixel-perfect drawing
 
 - [ ] **Result:** ______

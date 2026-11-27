@@ -1,0 +1,37 @@
+H.test("unlock: riding 75 and 150 post once each; existing skills only seed", function()
+  local ns = H.Boot({ setup = function(w) w.skills = { { name = "Mining", rank = 150 } } end })
+  W.skills[2] = { name = "Horse Riding", rank = 75 }
+  W.Fire("SKILL_LINES_CHANGED")
+  W.Fire("SKILL_LINES_CHANGED")
+  W.Fire("CHAT_MSG_SKILL", "Your skill in Horse Riding has increased to 75.") -- not a 2nd post as skill
+  local ev = H.EventsOfType(ns, "unlock")
+  H.eq(#ev, 1)
+  H.contains(ev[1].raw, '"sub":"riding"')
+  H.eq(#H.EventsOfType(ns, "skill"), 0)
+  W.skills[2].rank = 150
+  W.Fire("SKILL_LINES_CHANGED")
+  ev = H.EventsOfType(ns, "unlock")
+  H.eq(#ev, 2)
+  H.contains(ev[2].raw, '"sub":"epicriding"')
+  -- a character that logs in with riding already learned posts nothing
+  local ns2 = H.Boot({ setup = function(w) w.skills = { { name = "Ram Riding", rank = 150 } } end })
+  W.Fire("SKILL_LINES_CHANGED")
+  H.eq(#H.EventsOfType(ns2, "unlock"), 0)
+end)
+
+H.test("unlock: dual spec posts once when the talent groups go from 1 to 2", function()
+  local ns = H.Boot()
+  W.Fire("PLAYER_TALENT_UPDATE")
+  H.eq(#H.EventsOfType(ns, "unlock"), 0)
+  W.talentGroups = 2
+  W.Fire("PLAYER_TALENT_UPDATE")
+  W.Fire("ACTIVE_TALENT_GROUP_CHANGED")
+  local ev = H.EventsOfType(ns, "unlock")
+  H.eq(#ev, 1)
+  H.contains(ev[1].raw, '"sub":"dualspec"')
+  local ns2 = H.Boot({ db = NavtokDiscordDB, setup = function(w) w.talentGroups = 2 end })
+  W.Fire("PLAYER_TALENT_UPDATE")
+  H.eq(#H.EventsOfType(ns2, "unlock"), 1, "not again after relog")
+  local ns3 = H.Boot({ setup = function(w) w.talentGroups = 2 end })
+  H.eq(#H.EventsOfType(ns3, "unlock"), 0, "already had dual spec: no post")
+end)

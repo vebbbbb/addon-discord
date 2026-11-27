@@ -88,6 +88,8 @@ const (
 	colorLegacy  = 0xF1C40F
 	// rare / rare elite (silver dragon, gold dragon portraits)
 	colorRare      = 0xC0C0C0
+	colorAttune    = 0xFF6B1A // attunements, epic riding
+	colorTier05    = 0xD4AF37
 	colorRareElite = 0xE5B53A
 )
 
@@ -125,6 +127,67 @@ func fmtDuration(sec int) string {
 	return fmt.Sprintf("%dm %02ds", int(d.Minutes()), int(d.Seconds())%60)
 }
 
+// questEmbed fills a quest reward post by sub-type (see Notifiers/Quest.lua).
+func questEmbed(e *event.Event, em *Embed, wowhead string) {
+	item, quest, extra := e.Get("item"), e.Get("quest"), e.Get("extra")
+	itemURL := func() {
+		if id := e.Get("itemId"); id != "" && id != "0" && wowhead != "" {
+			em.URL = wowhead + "/item=" + id
+		} else if q := e.Get("questId"); q != "" && q != "0" && wowhead != "" {
+			em.URL = wowhead + "/quest=" + q
+		}
+	}
+	qcolor := func(def int) int {
+		if c, ok := QualityColors[e.Int("quality")]; ok && e.Get("item") != "" {
+			return c
+		}
+		return def
+	}
+	switch e.Get("sub") {
+	case "attunement":
+		em.Title = e.Char + " is attuned to " + extra + "!"
+		em.Description = "Completed **" + mdEscape(quest) + "**"
+		em.Color = colorAttune
+	case "tier05":
+		st := e.Int("stage")
+		if st >= 4 {
+			em.Title = "Tier 0.5 complete!"
+		} else {
+			em.Title = fmt.Sprintf("Upgraded to Tier 0.5 (stage %d/4)", st)
+		}
+		if extra != "" {
+			em.Description = mdEscape(extra)
+		}
+		em.Color = colorTier05
+	case "class":
+		em.Title = "Completed class quest " + quest
+		reward := item
+		if reward == "" {
+			reward = extra
+		}
+		if reward != "" {
+			em.Description = "→ **" + mdEscape(reward) + "**"
+		}
+		em.Color = classColor(e)
+	case "dungeon":
+		em.Title = "Quest reward: [" + item + "]"
+		em.Description = mdEscape(quest) + " (" + mdEscape(firstNonEmpty(extra, "Dungeon")) + ")"
+		em.Color = qcolor(colorDungeon)
+	default: // epic, allowlist
+		em.Title = "Quest reward: [" + item + "]"
+		em.Description = mdEscape(quest)
+		em.Color = qcolor(colorNeutral)
+	}
+	itemURL()
+}
+
+func firstNonEmpty(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}
+
 // SearchTag is the searchable word for a post type ("death", "pvp", "need", ...).
 func SearchTag(e *event.Event) string {
 	switch {
@@ -136,6 +199,16 @@ func SearchTag(e *event.Event) string {
 		return "need loot"
 	case e.Type == "equip":
 		return "boe equip"
+	case e.Type == "quest":
+		return "quest " + e.Get("sub")
+	case e.Type == "unlock":
+		switch e.Get("sub") {
+		case "dualspec":
+			return "dualspec"
+		case "epicriding":
+			return "riding epic"
+		}
+		return "riding"
 	}
 	return e.Type
 }
@@ -236,6 +309,20 @@ func Build(e *event.Event, o Options) Message {
 		}
 		if id := e.Get("itemId"); id != "" && id != "0" && wowhead != "" {
 			em.URL = wowhead + "/item=" + id
+		}
+	case "quest":
+		questEmbed(e, &em, wowhead)
+	case "unlock":
+		switch e.Get("sub") {
+		case "epicriding":
+			em.Title, em.Description, em.Color = "Learned epic riding!", "Epic mount unlocked", colorAttune
+		case "dualspec":
+			em.Title, em.Description, em.Color = "Unlocked Dual Specialization", "Two talent specs", classColor(e)
+		default:
+			em.Title, em.Description, em.Color = "Learned riding!", "First mount unlocked", colorWin
+		}
+		if s := e.Get("skill"); s != "" && e.Get("sub") != "dualspec" {
+			em.Description += " (" + mdEscape(s) + ")"
 		}
 	case "recipe":
 		em.Title = "Learned [" + e.Get("item") + "]"
