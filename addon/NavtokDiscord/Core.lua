@@ -288,4 +288,9 @@ ns.On("PLAYER_LOGIN", function()
     end
   end
   if ns.Probe and ns.db.probeEnabled then ns.Probe.SetEnabled(true, true) end
+  -- after an update: say once that the new version is loaded (so a missing /reload is visible)
+  if ns.db.loadedVersion ~= ns.VERSION then
+    if ns.db.loadedVersion then ns.Print("updated to v" .. ns.VERSION .. " - the new version is active") end
+    ns.db.loadedVersion = ns.VERSION
+  end
 end)

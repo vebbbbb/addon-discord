@@ -17,6 +17,14 @@ fi
 if [[ -n "${NAVTOK_UPDATE_REPO:-}" ]]; then
   LDFLAGS="$LDFLAGS -X ${PKG}.UpdateRepo=${NAVTOK_UPDATE_REPO}"
 fi
+# stamp the release version into the addon that gets embedded (shown by /navtok), restore after
+if [[ "$VERSION" == v* ]]; then
+  cp addon/NavtokDiscord/Core.lua /tmp/navtok-core.lua.bak
+  cp addon/NavtokDiscord/NavtokDiscord.toc /tmp/navtok-toc.bak
+  trap 'cp /tmp/navtok-core.lua.bak addon/NavtokDiscord/Core.lua; cp /tmp/navtok-toc.bak addon/NavtokDiscord/NavtokDiscord.toc' EXIT
+  sed -i "s/^ns.VERSION = .*/ns.VERSION = \"${VERSION#v}\"/" addon/NavtokDiscord/Core.lua
+  sed -i "s/^## Version: .*/## Version: ${VERSION#v}/" addon/NavtokDiscord/NavtokDiscord.toc
+fi
 GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o "$OUT/NAVTOK.exe" ./companion/cmd/navtok
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "${LDFLAGS#-H windowsgui }" -o "$OUT/navtok-linux-amd64" ./companion/cmd/navtok
 

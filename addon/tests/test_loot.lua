@@ -169,3 +169,32 @@ H.test("loot: greed win in the loot history does not post; roll lines on CHAT_MS
   W.Fire("CHAT_MSG_LOOT", "You receive loot: " .. ruby)
   H.contains(NavtokDiscordDB.probe[#NavtokDiscordDB.probe], "CHAT_MSG_LOOT: You receive loot: ||cff1eff00")
 end)
+
+H.test("loot: need win from the modern loot history (winner isSelf, state Need)", function()
+  local ns = H.Boot()
+  local rune = "|cff1eff00|Hitem:12662::::::::60:::::|h[Demonic Rune]|h|r"
+  W.items[12662] = { name = "Demonic Rune", quality = 2 }
+  local drops = {
+    { lootListID = 1, itemHyperlink = rune, winner = { playerName = "Arve Benito", roll = 66, state = 0, isSelf = false } },
+    { lootListID = 2, itemHyperlink = rune, winner = { playerName = "Testchar", roll = 91, state = 0, isSelf = true } },
+    { lootListID = 3, itemHyperlink = rune, winner = { playerName = "Testchar", roll = 80, state = 3, isSelf = true } }, -- greed
+  }
+  C_LootHistory = { GetSortedDropsForEncounter = function() return drops end }
+  W.Fire("LOOT_HISTORY_UPDATE_DROP", 99, 2)
+  W.Advance(0.3)
+  W.Fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 99)
+  W.Advance(0.3)
+  C_LootHistory = nil
+  local ev = H.EventsOfType(ns, "loot")
+  H.eq(#ev, 1)
+  H.contains(ev[1].raw, '"rollValue":91')
+  H.contains(ev[1].raw, '"item":"Demonic Rune"')
+end)
+
+H.test("core: after an update the new version announces itself once", function()
+  local ns = H.Boot({ db = { loadedVersion = "0.0.1" } })
+  H.contains(table.concat(W.chat, "\n"), "updated to v" .. ns.VERSION)
+  local n = #W.chat
+  H.Boot({ db = NavtokDiscordDB })
+  H.ok(not table.concat(W.chat, "\n"):find("updated to"), "not again")
+end)

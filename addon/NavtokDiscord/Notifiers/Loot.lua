@@ -246,6 +246,58 @@ function N:ScanHistory()
   end
 end
 
+-- Modern loot history (retail-style roll history: "[Loot]" lines, possibly printed by the UI
+-- without a chat event). C_LootHistory.GetSortedDropsForEncounter(encounterID) returns drops
+-- { lootListID, itemHyperlink, winner = { playerName, roll, state, isSelf } }; state 0/1 = Need
+-- (Enum.EncounterLootDropRollState.NeedMainSpec / NeedOffSpec).
+local function isNeedState(state)
+  local E = Enum and Enum.EncounterLootDropRollState
+  if E and E.NeedMainSpec then return state == E.NeedMainSpec or state == E.NeedOffSpec end
+  return state == 0 or state == 1
+end
+
+function N:ModernDrops(encounterID)
+  local H = C_LootHistory
+  if not (H and H.GetSortedDropsForEncounter) then return {} end
+  local encounters = {}
+  if encounterID then
+    encounters[1] = encounterID
+  elseif H.GetAllEncounterInfos then
+    local ok, infos = pcall(H.GetAllEncounterInfos)
+    for _, e in ipairs(ok and infos or {}) do encounters[#encounters + 1] = e.encounterID end
+  end
+  local out = {}
+  for _, enc in ipairs(encounters) do
+    local ok, drops = pcall(H.GetSortedDropsForEncounter, enc)
+    for _, d in ipairs(ok and type(drops) == "table" and drops or {}) do
+      out[#out + 1] = { enc = enc, drop = d }
+    end
+  end
+  return out
+end
+
+function N:ScanModern(encounterID)
+  for _, x in ipairs(self:ModernDrops(encounterID)) do
+    local d, w = x.drop, x.drop.winner
+    local key = "m" .. tostring(x.enc) .. ":" .. tostring(d.lootListID)
+    if w and d.itemHyperlink and not self.historyDone[key] then
+      self.historyDone[key] = true
+      if w.isSelf and isNeedState(w.state) then self:Won(d.itemHyperlink, tonumber(w.roll), true) end
+    end
+  end
+end
+
+function N:ProbeModern(encounterID)
+  if not (ns.db and ns.db.probeLoot) then return end
+  local log = ns.Probe and ns.Probe.Log or ns.Print
+  for _, x in ipairs(self:ModernDrops(encounterID)) do
+    local d, w = x.drop, x.drop.winner or {}
+    log(("history enc=%s drop=%s %s winner=%s state=%s roll=%s self=%s"):format(tostring(x.enc),
+      tostring(d.lootListID), tostring(d.itemHyperlink):gsub("|", "||"), tostring(w.playerName),
+      tostring(w.state), tostring(w.roll), tostring(w.isSelf)))
+  end
+end
+
 -- `/navtok probe loot`: raw text and event of every loot/roll message (formats differ per client)
 function N:ProbeRaw(event, msg)
   if not (ns.db and ns.db.probeLoot) then return end
@@ -271,6 +323,15 @@ function N:Init()
   for _, e in ipairs({ "LOOT_HISTORY_ROLL_COMPLETE", "LOOT_HISTORY_FULL_UPDATE", "LOOT_HISTORY_ROLL_CHANGED",
     "LOOT_ROLLS_COMPLETE" }) do
     ns.On(e, function(ev) N:ProbeRaw(ev, "") ns.After(0.2, function() N:ScanHistory() end) end)
+  end
+  for _, e in ipairs({ "LOOT_HISTORY_UPDATE_DROP", "LOOT_HISTORY_UPDATE_ENCOUNTER" }) do
+    ns.On(e, function(ev, encounterID, lootListID)
+      N:ProbeRaw(ev, tostring(encounterID) .. " " .. tostring(lootListID))
+      ns.After(0.2, function()
+        N:ProbeModern(encounterID)
+        N:ScanModern(encounterID)
+      end)
+    end)
   end
   if hooksecurefunc and RollOnLoot then
     hooksecurefunc("RollOnLoot", function(rollID, rollType)
