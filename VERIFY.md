@@ -156,6 +156,13 @@ Forever's client database defines the legacy challenges as achievements (176 of 
    note the text; the patterns come from LOOT_ROLL_* GlobalStrings, so they should follow.
 3. Win an item on **Greed**: no need post (an epic still posts as normal loot).
 
+## 7c2. Need wins with Forever's "[Loot]" roll system
+
+- [ ] `/navtok probe loot` on, roll Need and win: note the event names and raw text printed
+  (CHAT_MSG_LOOT / CHAT_MSG_SYSTEM / LOOT_HISTORY_*). The post should read "Won [Item] (Need NN)".
+- [ ] `/run print(C_LootHistory and C_LootHistory.GetNumItems and C_LootHistory.GetNumItems())`
+  prints a number (the loot history API exists).
+
 ## 7d. BoE equipped, recipes from items, PvP deaths, settings window
 
 - [ ] BoE: equip a blue BoE item -> confirm the bind popup -> "Equipped [Item]" post. If nothing,

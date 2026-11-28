@@ -135,11 +135,15 @@ local function needMinQuality()
   return tonumber((ns.settings or ns.DEFAULTS).needMinQuality) or 0
 end
 
-function N:Won(link)
+-- byHistory = true: the loot history already says it was a Need win (no chat marks needed).
+function N:Won(link, rollValue, byHistory)
   local id = itemIdOf(link)
-  local at = id and self.needs[id]
-  if not at or GetTime() - at > self.NEED_TTL then return end -- not won by need
+  if not id then return end
+  if self.wonByNeed[id] and GetTime() - self.wonByNeed[id] < 30 then return end -- already posted
+  local at = self.needs[id]
+  if not byHistory and (not at or GetTime() - at > self.NEED_TTL) then return end -- not won by need
   self.needs[id] = nil
+  if rollValue then self.rollValues[id] = rollValue end
   local name, _, quality = GetItemInfo(link)
   if quality == nil then
     local color = link:match("|c%x%x(%x%x%x%x%x%x)")
@@ -214,14 +218,60 @@ function N:Timeout(itemId)
   end
 end
 
+-------------------------------------------------------------------------------
+-- Loot history (Wrath-style "[Loot]" roll system): the most reliable source when it exists.
+-- C_LootHistory.GetItem(i) -> rollID, itemLink, numPlayers, isDone, winnerIdx
+-- C_LootHistory.GetPlayerInfo(i, p) -> name, class, rollType (1 = need), roll, isWinner
+-------------------------------------------------------------------------------
+N.historyDone = {} -- rollID -> true
+
+local function shortName(n) return n and (n:gsub("%-.*$", "")) end
+
+function N:ScanHistory()
+  local H = C_LootHistory
+  if not (H and H.GetNumItems and H.GetItem and H.GetPlayerInfo) then return end
+  local me = ns.playerName
+  for i = 1, (H.GetNumItems() or 0) do
+    local ok, rollID, link, numPlayers, isDone, winnerIdx = pcall(H.GetItem, i)
+    if ok and isDone and winnerIdx and link and rollID and not self.historyDone[rollID] then
+      local ok2, name, _, rollType, roll = pcall(H.GetPlayerInfo, i, winnerIdx)
+      if ok2 then
+        self.historyDone[rollID] = true
+        local who = shortName(name)
+        if rollType == 1 and (who == me or (who and me and who:sub(1, #me + 1) == me .. " ")) then
+          self:Won(link, tonumber(roll), true)
+        end
+      end
+    end
+  end
+end
+
+-- `/navtok probe loot`: raw text and event of every loot/roll message (formats differ per client)
+function N:ProbeRaw(event, msg)
+  if not (ns.db and ns.db.probeLoot) then return end
+  local log = ns.Probe and ns.Probe.Log or ns.Print
+  log(event .. ": " .. tostring(msg):gsub("|", "||"))
+end
+
 function N:Init()
   self:BuildPatterns()
   ns.On("CHAT_MSG_LOOT", function(_, msg)
     msg = msg or ""
+    N:ProbeRaw("CHAT_MSG_LOOT", msg)
     if N:HandleRoll(msg) then return end
     local link, count = N:Parse(msg)
     if link then N:Handle(link, count) end
   end)
+  -- roll messages may arrive on another chat type in Forever
+  ns.On("CHAT_MSG_SYSTEM", function(_, msg)
+    msg = msg or ""
+    if msg:find("Need", 1, true) or msg:find("won", 1, true) or msg:find("Roll", 1, true) then N:ProbeRaw("CHAT_MSG_SYSTEM", msg) end
+    N:HandleRoll(msg)
+  end)
+  for _, e in ipairs({ "LOOT_HISTORY_ROLL_COMPLETE", "LOOT_HISTORY_FULL_UPDATE", "LOOT_HISTORY_ROLL_CHANGED",
+    "LOOT_ROLLS_COMPLETE" }) do
+    ns.On(e, function(ev) N:ProbeRaw(ev, "") ns.After(0.2, function() N:ScanHistory() end) end)
+  end
   if hooksecurefunc and RollOnLoot then
     hooksecurefunc("RollOnLoot", function(rollID, rollType)
       if rollType == 1 and GetLootRollItemLink then

@@ -126,3 +126,46 @@ H.test("loot: need win with Forever chat format ([Loot]: prefix, full name with 
   H.contains(ev[1].raw, '"rollValue":84')
   H.contains(ev[1].raw, '"item":"Leggings of Frenzied Magic"')
 end)
+
+H.test("loot: need win from the loot history (no chat lines at all)", function()
+  local ns = H.Boot()
+  local ruby = "|cff1eff00|Hitem:7910::::::::60:::::|h[Star Ruby]|h|r"
+  W.items[7910] = { name = "Star Ruby", quality = 2 }
+  local players = { { "Arve Benito", "WARRIOR", 2, 12 }, { "Testchar", "WARRIOR", 1, 55 } }
+  C_LootHistory = {
+    GetNumItems = function() return 1 end,
+    GetItem = function() return 77, ruby, 2, true, 2 end,
+    GetPlayerInfo = function(_, p) local x = players[p] return x[1], x[2], x[3], x[4], p == 2 end,
+  }
+  W.Fire("LOOT_HISTORY_ROLL_COMPLETE")
+  W.Advance(0.3)
+  W.Fire("LOOT_HISTORY_FULL_UPDATE")
+  W.Advance(0.3)
+  W.Fire("CHAT_MSG_LOOT", "You receive loot: " .. ruby)
+  C_LootHistory = nil
+  local ev = H.EventsOfType(ns, "loot")
+  H.eq(#ev, 1)
+  H.contains(ev[1].raw, '"roll":"need"')
+  H.contains(ev[1].raw, '"rollValue":55')
+end)
+
+H.test("loot: greed win in the loot history does not post; roll lines on CHAT_MSG_SYSTEM work", function()
+  local ns = H.Boot()
+  local ruby = "|cff1eff00|Hitem:7910::::::::60:::::|h[Star Ruby]|h|r"
+  W.items[7910] = { name = "Star Ruby", quality = 2 }
+  C_LootHistory = {
+    GetNumItems = function() return 1 end,
+    GetItem = function() return 78, ruby, 1, true, 1 end,
+    GetPlayerInfo = function() return "Testchar", "WARRIOR", 2, 90, true end,
+  }
+  W.Fire("LOOT_HISTORY_ROLL_COMPLETE")
+  W.Advance(0.3)
+  C_LootHistory = nil
+  H.eq(#H.EventsOfType(ns, "loot"), 0)
+  W.Fire("CHAT_MSG_SYSTEM", "|HlootHistory:9|h[Loot]|h: You have selected Need for: " .. ruby)
+  W.Fire("CHAT_MSG_SYSTEM", "|HlootHistory:9|h[Loot]|h: You won: " .. ruby)
+  H.eq(#H.EventsOfType(ns, "loot"), 1)
+  SlashCmdList["NAVTOK"]("probe loot")
+  W.Fire("CHAT_MSG_LOOT", "You receive loot: " .. ruby)
+  H.contains(NavtokDiscordDB.probe[#NavtokDiscordDB.probe], "CHAT_MSG_LOOT: You receive loot: ||cff1eff00")
+end)

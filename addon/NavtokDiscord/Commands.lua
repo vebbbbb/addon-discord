@@ -93,6 +93,10 @@ function C.Handle(msg)
   elseif cmd == "probe" then
     if rest == "shot" then
       ns.Probe.ShotTest()
+    elseif rest == "loot" or rest == "loot on" or rest == "loot off" then
+      ns.db.probeLoot = (rest == "loot on") or (rest == "loot" and not ns.db.probeLoot)
+      ns.Print("loot probe " .. (ns.db.probeLoot and "|cff00ff00on|r: every loot/roll message is printed raw"
+        or "|cffff0000off|r"))
     elseif rest == "quest" or rest == "quest on" or rest == "quest off" then
       ns.db.probeQuest = (rest == "quest on") or (rest == "quest" and not ns.db.probeQuest)
       ns.Print("quest probe " .. (ns.db.probeQuest and "|cff00ff00on|r: every quest turn-in window prints its IDs"
